@@ -1,20 +1,30 @@
 # Product Requirement Document (PRD)
-## Project Name: SecurAI - Incident & Phishing Detection Assistant
+
+## Project Name: SecurAI - Intelligent Phishing & Social Engineering Triage
 
 ### 1. Overview & Objective
-SecurAI adalah chatbot asisten keamanan siber yang dirancang untuk membantu pengguna awam dan staf organisasi memvalidasi potensi ancaman phishing serta rekayasa sosial (social engineering).
 
-### 2. Target Users
-- Mahasiswa / Karyawan non-teknis.
-- Pengguna umum yang membutuhkan validasi cepat atas pesan atau email mencurigakan.
+SecurAI adalah sistem asisten keamanan cerdas berbasis web yang membantu pengguna awam dan staf organisasi memvalidasi potensi ancaman phishing, smishing, dan rekayasa sosial (*social engineering*) secara *real-time*.
 
-### 3. Core Features
-- **Threat Indicator Analysis:** Menganalisis pesan teks pengguna untuk mencari unsur urgensi buatan, domain palsu, ancaman, atau permintaan kredensial.
-- **Risk Level Scoring:** Mengklasifikasikan risiko pesan ke dalam tingkat Rendah (Low), Sedang (Medium), atau Tinggi (High).
-- **Incident Mitigation Checklist:** Memberikan 3 tindakan mitigasi taktis yang harus dilakukan pengguna.
-- **Prompt Injection Defense:** Sanitasi payload di backend agar bot tidak mengeksekusi instruksi arbitrer yang berbahaya.
+### 2. Problem Statement
 
-### 4. Technical Specifications
-- **Backend:** Python (FastAPI / Uvicorn)
-- **Frontend:** Single Page UI (HTML5, Tailwind CSS, Vanilla JS Fetch API)
-- **AI Engine:** Google Gemini API (Model: gemini-2.5-flash)
+Banyak korban penipuan digital terkecoh oleh manipulasi psikologis (urgensi, impersonasi institusi resmi) dan tautan mencurigakan. Pengguna awam membutuhkan alat validasi instan yang tidak hanya memberi tahu "apakah ini aman", tetapi juga menjelaskan *mengapa* itu berbahaya dan apa tindakan daruratnya.
+
+### 3. Target Users
+
+- Karyawan / Staf operasional non-IT.
+- Mahasiswa dan masyarakat umum pengguna layanan digital / perbankan.
+
+### 4. Core Features
+
+- **Hybrid Analysis Engine:** Kombinasi pemindaian pola regex lokal (deteksi URL, domain IP, kata kunci urgensi) dan penalaran LLM (*contextual reasoning*).
+- **Structured Risk Scoring:** Menghasilkan skor risiko (0–100), kategori risiko (Rendah / Sedang / Kritis), dan daftar taktik manipulasi yang terdeteksi.
+- **Actionable Emergency Checklist:** Memberikan langkah penanganan mitigasi konkret jika pengguna terlanjur berinteraksi dengan pesan tersebut.
+- **Defensive Safeguards:** Sanitasi payload dan proteksi terhadap serangan *prompt injection*.
+
+### 5. Technical Stack
+
+- **Backend:** Python 3.10+, FastAPI, Uvicorn
+- **AI Engine:** Google Gemini API (`gemini-2.5-flash`)
+- **Frontend:** Single-page dashboard (HTML5, Tailwind CSS, Vanilla JS)
+- **Validation & Testing:** Pydantic v2, Pytest
