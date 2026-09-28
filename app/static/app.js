@@ -9,13 +9,11 @@ const imagePreview = document.getElementById('image-preview');
 let chatHistory = [];
 let attachedImageBase64 = null;
 
-// Auto-expand textarea sesuai panjang ketikan
 userInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight) + 'px';
 });
 
-// Izinkan Enter untuk kirim, Shift+Enter untuk baris baru
 userInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -23,16 +21,14 @@ userInput.addEventListener('keydown', function(e) {
     }
 });
 
-// Dukungan Paste Screenshot Langsung (Ctrl + V)
+// Paste screenshot langsung (Ctrl + V)
 window.addEventListener('paste', (e) => {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     for (let item of items) {
         if (item.type.indexOf('image') === 0) {
             const blob = item.getAsFile();
             const reader = new FileReader();
-            reader.onload = (event) => {
-                setImage(event.target.result);
-            };
+            reader.onload = (event) => setImage(event.target.result);
             reader.readAsDataURL(blob);
         }
     }
@@ -58,7 +54,7 @@ function removeImage() {
     imagePreviewContainer.classList.add('hidden');
 }
 
-// Fungsi Kasus Cepat: Hanya mengisi input dan fokus (TIDAK auto-submit)
+// Hanya mengisi input dan fokus, TIDAK auto-send
 function fillInput(text) {
     userInput.value = text;
     userInput.style.height = 'auto';
@@ -72,10 +68,10 @@ function appendMessage(role, text, data = {}) {
     wrapper.className = isUser ? 'flex justify-end' : 'flex gap-3 max-w-3xl';
 
     if (isUser) {
-        let imageMarkup = data.image ? `<img src="${data.image}" class="max-w-xs rounded-lg mb-2 border border-cyan-700">` : '';
+        let imgTag = data.image ? `<img src="${data.image}" class="max-w-xs rounded-xl mb-2 border border-cyan-700 shadow-md">` : '';
         wrapper.innerHTML = `
             <div class="bg-cyan-950/70 border border-cyan-800/60 text-slate-100 p-3.5 rounded-2xl rounded-tr-none text-sm max-w-xl shadow-md">
-                ${imageMarkup}
+                ${imgTag}
                 <div>${escapeHtml(text)}</div>
             </div>
         `;
@@ -84,17 +80,24 @@ function appendMessage(role, text, data = {}) {
         const mitreTags = data.mitre_tags || [];
         const category = data.threat_category || "Informasi Umum";
 
+        // Tentukan apakah pesan ini memuat investigasi insiden/tautan
+        const isIncident = (heuristics && (heuristics.has_suspicious_elements || heuristics.detected_urls.length > 0)) 
+                            || (category !== "Informasi Umum") 
+                            || data.image;
+
         let badgeHeader = '';
         if (heuristics && heuristics.has_suspicious_elements) {
             const score = heuristics.heuristic_score;
-            const badgeColor = score > 60 ? 'rose' : score > 25 ? 'amber' : 'yellow';
+            const badgeColor = score > 50 ? 'rose' : score > 20 ? 'amber' : 'yellow';
             
             let defangedList = heuristics.defanged_urls.length > 0 
                 ? `<div class="mt-1 font-mono text-[11px] text-slate-300"><strong>Defanged URLs:</strong> ${heuristics.defanged_urls.join(', ')}</div>` 
                 : '';
 
+            let titleInfo = heuristics.web_title ? `<div class="text-[11px] text-slate-400 mt-1"><strong>Judul Halaman:</strong> ${escapeHtml(heuristics.web_title)}</div>` : '';
+
             badgeHeader = `
-                <div class="mb-3 p-3 rounded-xl bg-${badgeColor}-950/40 border border-${badgeColor}-800/60 text-xs">
+                <div class="mb-3 p-3.5 rounded-xl bg-${badgeColor}-950/40 border border-${badgeColor}-800/60 text-xs shadow-inner">
                     <div class="flex items-center justify-between font-semibold text-${badgeColor}-400 mb-1">
                         <span><i class="fa-solid fa-triangle-exclamation"></i> Threat Telemetry (Score: ${score}/100)</span>
                         <span class="px-2 py-0.5 rounded bg-slate-900 border border-${badgeColor}-800 text-[10px] uppercase font-mono">${category}</span>
@@ -103,6 +106,7 @@ function appendMessage(role, text, data = {}) {
                         ${heuristics.risk_flags.map(f => `<li>${escapeHtml(f)}</li>`).join('')}
                     </ul>
                     ${defangedList}
+                    ${titleInfo}
                 </div>
             `;
         }
@@ -116,24 +120,29 @@ function appendMessage(role, text, data = {}) {
             `;
         }
 
-        // Buat ID unik untuk laporan insiden yang bisa diekspor
-        const reportId = 'INC-' + Math.floor(100000 + Math.random() * 900000);
-
-        wrapper.innerHTML = `
-            <div class="w-8 h-8 rounded-lg bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs">
-                <i class="fa-solid fa-robot"></i>
-            </div>
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm w-full">
-                ${badgeHeader}
-                ${mitreBadges}
-                <div class="whitespace-pre-wrap leading-relaxed">${formatMarkdown(text)}</div>
-                
+        // HANYA tampilkan footer Laporan Insiden jika ini adalah investigasi ancaman/link
+        let incidentFooter = '';
+        if (isIncident) {
+            const reportId = 'INC-' + Math.floor(100000 + Math.random() * 900000);
+            incidentFooter = `
                 <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
                     <span class="font-mono text-[10px]">Case ID: ${reportId}</span>
                     <button onclick="exportReport('${reportId}', \`${escapeForExport(text)}\`, '${category}')" class="hover:text-cyan-400 transition flex items-center gap-1 font-mono text-[11px]">
                         <i class="fa-solid fa-download"></i> Unduh Laporan Insiden (.md)
                     </button>
                 </div>
+            `;
+        }
+
+        wrapper.innerHTML = `
+            <div class="w-8 h-8 rounded-xl bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs shadow-inner">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm w-full">
+                ${badgeHeader}
+                ${mitreBadges}
+                <div class="whitespace-pre-wrap leading-relaxed">${formatMarkdown(text)}</div>
+                ${incidentFooter}
             </div>
         `;
     }
@@ -162,7 +171,7 @@ chatForm.addEventListener('submit', async (e) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                message: message || "Analisis gambar berikut:", 
+                message: message || "Tolong analisis gambar/link berikut:", 
                 history: chatHistory,
                 image_base64: imgToSend
             })
@@ -175,10 +184,10 @@ chatForm.addEventListener('submit', async (e) => {
             chatHistory.push({ role: 'assistant', content: data.reply });
             if (chatHistory.length > 8) chatHistory = chatHistory.slice(-8);
         } else {
-            appendMessage('assistant', `⚠️ Kesalahan Server: ${data.detail || 'Gagal memproses analisis.'}`);
+            appendMessage('assistant', `⚠️ Kesalahan Server: ${data.detail || 'Gagal memproses pesan.'}`);
         }
     } catch (err) {
-        appendMessage('assistant', '⚠️ Gagal tersambung ke backend SecurAI.');
+        appendMessage('assistant', '⚠️ Gagal tersambung ke server SecurAI.');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i>';
