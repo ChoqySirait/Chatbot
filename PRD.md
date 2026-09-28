@@ -1,30 +1,26 @@
 # Product Requirement Document (PRD)
 
-## Project Name: SecurAI - Intelligent Phishing & Social Engineering Triage
+## Project Name: SecurAI — SOC L1 Triage & Multi-Vector Threat Intelligence Assistant
 
-### 1. Overview & Objective
-
-SecurAI adalah sistem asisten keamanan cerdas berbasis web yang membantu pengguna awam dan staf organisasi memvalidasi potensi ancaman phishing, smishing, dan rekayasa sosial (*social engineering*) secara *real-time*.
+### 1. Executive Summary & Objective
+SecurAI adalah platform asisten keamanan siber interaktif (*Conversational Incident Triage*) yang menggabungkan analisis heuristik lokal deterministik dan model kognitif AI (*Gemini 3.8 Flash*). Sistem ini dirancang untuk mendeteksi ancaman rekayasa sosial, menginspeksi tautan mencurigakan secara aman, menganalisis tangkapan layar situs yang diblokir (*multimodal vision*), serta memetakan temuan ke framework global **MITRE ATT&CK**.
 
 ### 2. Problem Statement
+Pengguna sering menjadi korban penipuan digital (phishing perbankan, malware APK, dan situs judi online) karena kesulitan membedakan konten manipulatif. Selain itu, banyak sistem keamanan gagal membedakan antara **situs ilegal hak cipta (seperti platform baca komik/streaming)** dengan **situs yang secara aktif mengeksploitasi data (*malicious*)**, sehingga edukasi yang diberikan sering kali keliru.
 
-Banyak korban penipuan digital terkecoh oleh manipulasi psikologis (urgensi, impersonasi institusi resmi) dan tautan mencurigakan. Pengguna awam membutuhkan alat validasi instan yang tidak hanya memberi tahu "apakah ini aman", tetapi juga menjelaskan *mengapa* itu berbahaya dan apa tindakan daruratnya.
+### 3. Core Feature Requirements
 
-### 3. Target Users
+| ID | Fitur | Deskripsi | Prioritas |
+|---|---|---|---|
+| F-01 | **Safe URL Inspector** | Menginspeksi metadata URL publik secara aman dengan proteksi anti-SSRF dan pelacakan redirect (*unshortener*). | High |
+| F-02 | **Multimodal Screenshot Triage** | Menganalisis tangkapan layar situs jika web memblokir crawling bot otomatis (Cloudflare/WAF) via AI Vision. | High |
+| F-03 | **Threat Categorization Matrix** | Mengklasifikasikan entitas ke dalam: (1) Aman/Resmi, (2) Ilegal Non-Destruktif (Malvertising Risk), dan (3) Aktif Berbahaya. | High |
+| F-04 | **Automated URL Defanging** | Menetralkan tautan berbahaya (`hxxp[://]domain[.]com`) agar aman dari klik tidak disengaja. | High |
+| F-05 | **MITRE ATT&CK Mapping** | Melabeli taktik penyerang secara otomatis (T1566.002, T1566.001, T1056.003). | Medium |
+| F-06 | **1-Click Incident Export** | Mengekspor hasil investigasi insiden ke berkas Markdown/JSON yang rapi untuk audit keamanan. | Medium |
 
-- Karyawan / Staf operasional non-IT.
-- Mahasiswa dan masyarakat umum pengguna layanan digital / perbankan.
-
-### 4. Core Features
-
-- **Hybrid Analysis Engine:** Kombinasi pemindaian pola regex lokal (deteksi URL, domain IP, kata kunci urgensi) dan penalaran LLM (*contextual reasoning*).
-- **Structured Risk Scoring:** Menghasilkan skor risiko (0–100), kategori risiko (Rendah / Sedang / Kritis), dan daftar taktik manipulasi yang terdeteksi.
-- **Actionable Emergency Checklist:** Memberikan langkah penanganan mitigasi konkret jika pengguna terlanjur berinteraksi dengan pesan tersebut.
-- **Defensive Safeguards:** Sanitasi payload dan proteksi terhadap serangan *prompt injection*.
-
-### 5. Technical Stack
-
-- **Backend:** Python 3.10+, FastAPI, Uvicorn
-- **AI Engine:** Google Gemini API (`gemini-2.5-flash`)
-- **Frontend:** Single-page dashboard (HTML5, Tailwind CSS, Vanilla JS)
-- **Validation & Testing:** Pydantic v2, Pytest
+### 4. Technical Specifications
+- **Runtime & Framework:** Python 3.10+, FastAPI, Uvicorn (Asynchronous I/O)
+- **AI Engine:** Google GenAI SDK (Model: `gemini-3.8-flash`)
+- **Inspection Engine:** HTTPX Safe Scraper dengan verifikasi subnet IP privat (RFC 1918)
+- **Frontend Console:** Responsive Dark-Mode SOC Console (HTML5, Tailwind CSS, Vanilla JS)
