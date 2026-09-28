@@ -6,42 +6,51 @@ from app.config import settings
 from app.schemas import Message
 
 SYSTEM_INSTRUCTION = """
-Kamu adalah SecurAI, asisten dan teman diskusi keamanan siber yang ramah, komunikatif, dan berwawasan luas.
+Kamu adalah SecurAI, asisten AI cerdas, solutif, dan komunikatif di bidang Cybersecurity & Analisis Insiden.
+Gaya bicaramu ramah, cerdas, tidak kaku, berbahasa Indonesia dengan sangat luwes layaknya konsultan siber profesional.
 
-GAYA KOMUNIKASI & INTERAKSI:
-1. INTERAKSI AWAL / SAPAAN SANTAI:
-   - Jika pengguna menyapa (seperti "halo", "hai", "selamat siang") atau mengajak mengobrol biasa, balaslah dengan sangat ramah, hangat, dan luwes selayaknya teman diskusi/konsultan profesional.
-   - Sambut mereka dan tanyakan apa yang ingin didiskusikan hari ini—apakah tentang tips keamanan akun, cerita modus penipuan baru, atau ada tautan/file mencurigakan yang ingin diperiksa bersama.
-2. DISKUSI & EDUKASI KONSEPTUAL:
-   - Jawab pertanyaan teori atau tips keamanan secara runtut, mudah dipahami orang awam, tidak kaku, dan berikan analogi nyata.
-3. KASUS TAUTAN / PESAN MENCURIGAKAN:
-   - Jika ada indikasi ancaman, bedah secara objektif:
-     a. Tentukan status: [RESMI/AMAN], [ILEGAL (RISIKO MALVERTISING)] (seperti web komik/manhwa yang risikonya dari iklan pop-up), atau [AKTIF BERBAHAYA] (seperti phishing/scam/APK trojan).
-     b. Jelaskan kenapa berbahaya dengan bahasa yang jelas.
-     c. Berikan langkah mitigasi taktis dan solutif.
-     d. Cantumkan taktik MITRE ATT&CK jika relevan.
+ATURAN INTERAKSI:
+1. SAPAAN AWAL / OBROLAN SANTAI (misal: "halo", "hai", "selamat malam", "kamu siapa"):
+   - Balaslah dengan hangat dan natural layaknya asisten pintar.
+   - Sambut pengguna dan katakan kamu siap membantu mereka berdiskusi tentang keamanan siber, mengulas tips keamanan digital, ataupun menganalisis tautan/pesan mencurigakan.
+   - JANGAN membuat laporan insiden palsu untuk sapaan santai.
+2. DISKUSI TEORI & EDUKASI KONSEPTUAL:
+   - Jawab pertanyaan seputar keamanan siber secara runtut, cerdas, dan sertakan contoh taktis yang mudah dimengerti.
+3. JIKA PENGGUNA MEMBERIKAN LINK / PESAN / SCREENSHOT:
+   - Kamu akan menerima laporan [TELEMETRI WEB & HEURISTIK] dari sistem.
+   - Uraikan dengan jelas:
+     a. Status Klasifikasi:
+        - [RESMI/AMAN]: Situs terverifikasi institusi resmi.
+        - [ILEGAL (RISIKO MALVERTISING)]: Platform komik/manhwa/streaming bajakan. Jelaskan secara objektif bahwa situsnya adalah pembaca gambar (bukan malware perusak data), namun ancamannya ada pada iklan jebakan pihak ketiga (pop-up judol, redirect otomatis). Sarankan memakai adblocker (uBlock Origin) dan jangan klik iklan.
+        - [AKTIF BERBAHAYA]: Phishing login bank, penipuan uang/undian palsu, aplikasi APK berbahaya, atau situs judi online.
+     b. Rangkuman Konten: Sebutkan judul halaman web atau isi pesan yang berhasil dibaca.
+     c. Mitigasi Darurat: Langkah nyata jika pengguna sudah terlanjur mengklik/mengisi data.
+     d. Taktik MITRE ATT&CK jika relevan (misal: MITRE T1566.002 Spearphishing Link).
+4. JIKA LINK DIBLOKIR BOT (WAF/Cloudflare):
+   - Jelaskan bahwa situs tujuan memproteksi diri dari bot otomatis.
+   - Arahkan pengguna: "Demi keamanan Anda, silakan coba buka tautan tersebut menggunakan Mode Samaran (Incognito Tab) tanpa login, lalu ambil tangkapan layar (screenshot) dan unggah ke sini agar saya bisa membaca visualnya."
 """
 
 def process_chat_with_gemini(message: str, history: List[Message], heuristic_data: Dict[str, Any], image_base64: str = None) -> Tuple[str, List[str], str]:
     if not settings.GEMINI_API_KEY:
-        return "⚠️ Konfigurasi API Key belum selesai. Mohon masukkan GEMINI_API_KEY di file .env.", [], "Informasi Umum"
+        return "⚠️ API Key belum disetel. Mohon masukkan GEMINI_API_KEY pada file .env.", [], "Informasi Umum"
 
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     heuristic_context = ""
     if heuristic_data.get("has_suspicious_elements"):
         heuristic_context = (
-            f"[HEURISTIC TELEMETRY]\n"
-            f"- Risk Score: {heuristic_data['heuristic_score']}/100\n"
+            f"[TELEMETRI WEB & HEURISTIK]\n"
+            f"- Heuristic Score: {heuristic_data['heuristic_score']}/100\n"
             f"- Defanged URLs: {heuristic_data['defanged_urls']}\n"
-            f"- Flags: {'; '.join(heuristic_data['risk_flags'])}\n"
-            f"- Web Title: {heuristic_data.get('web_title', 'N/A')}\n"
-            f"[END TELEMETRY]\n\n"
+            f"- Temuan: {'; '.join(heuristic_data['risk_flags'])}\n"
+            f"- Web Accessible: {heuristic_data.get('web_accessible')}\n"
+            f"- Judul Web: {heuristic_data.get('web_title', 'N/A')}\n"
+            f"- Deskripsi Web: {heuristic_data.get('web_desc', 'N/A')}\n"
+            f"[AKHIR TELEMETRI]\n\n"
         )
 
     parts = []
-    
-    # Tangani masukan gambar screenshot (Multimodal) jika ada
     if image_base64:
         try:
             if "," in image_base64:
@@ -52,16 +61,15 @@ def process_chat_with_gemini(message: str, history: List[Message], heuristic_dat
                 mime = "image/png"
             image_bytes = base64.b64decode(encoded)
             parts.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
-            parts.append(types.Part.from_text(text="Berikut adalah screenshot halaman web yang perlu diaudit."))
+            parts.append(types.Part.from_text(text="Berikut screenshot halaman web untuk diaudit."))
         except Exception:
             pass
 
     full_user_prompt = f"{heuristic_context}{message}"
     parts.append(types.Part.from_text(text=full_user_prompt))
 
-    # Bangun konteks percakapan
     gemini_contents = []
-    for msg in history[-8:]:  # Batasi konteks 8 pesan terakhir
+    for msg in history[-6:]:
         gemini_contents.append(
             types.Content(
                 role="user" if msg.role == "user" else "model",
@@ -70,35 +78,50 @@ def process_chat_with_gemini(message: str, history: List[Message], heuristic_dat
         )
     gemini_contents.append(types.Content(role="user", parts=parts))
 
-    try:
-        response = client.models.generate_content(
-            model=settings.MODEL_NAME,
-            contents=gemini_contents,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
-                temperature=0.25
+    # Mekanisme Multi-Model Fallback: coba model terbaik, jika sibuk (503), otomatis coba model berikutnya
+    reply_text = None
+    for model_name in settings.FALLBACK_MODELS:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=gemini_contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_INSTRUCTION,
+                    temperature=0.3
+                )
             )
+            if response and response.text:
+                reply_text = response.text
+                break
+        except Exception as err:
+            # Lanjut mencoba model cadangan berikutnya
+            continue
+
+    if not reply_text:
+        return (
+            "Halo! Layanan AI pusat saat ini sedang mengalami antrean trafik yang sangat tinggi. "
+            "Namun mesin pemindai heuristik lokal kami tetap aktif memantau link dan teks yang kamu kirimkan. "
+            "Silakan ulangi pesan Anda dalam beberapa saat.",
+            [],
+            "Informasi Umum"
         )
-        reply_text = response.text or "Tidak ada balasan dari model AI."
-        
-        # Ekstraksi otomatis tag MITRE
-        mitre_tags = []
-        if "T1566.002" in reply_text or "Spearphishing Link" in reply_text:
-            mitre_tags.append("MITRE T1566.002 (Phishing Link)")
-        if "T1566.001" in reply_text or ".apk" in message.lower():
-            mitre_tags.append("MITRE T1566.001 (Malicious File)")
-        if "T1056.003" in reply_text or "Credential" in reply_text:
-            mitre_tags.append("MITRE T1056.003 (Credential Harvesting)")
 
-        # Tentukan Kategori Ancaman
-        category = "Informasi Umum"
-        if "AKTIF BERBAHAYA" in reply_text.upper():
-            category = "Aktif Berbahaya (Malicious)"
-        elif "ILEGAL" in reply_text.upper() or "MALVERTISING" in reply_text.upper():
-            category = "Ilegal (Risiko Iklan/Malvertising)"
-        elif "RESMI" in reply_text.upper() or "AMAN" in reply_text.upper():
-            category = "Resmi/Aman"
+    # Identifikasi Tag MITRE
+    mitre_tags = []
+    if "T1566.002" in reply_text or "Spearphishing Link" in reply_text:
+        mitre_tags.append("MITRE T1566.002 (Phishing Link)")
+    if "T1566.001" in reply_text or ".apk" in message.lower():
+        mitre_tags.append("MITRE T1566.001 (Malicious File)")
+    if "T1056.003" in reply_text or "Credential" in reply_text:
+        mitre_tags.append("MITRE T1056.003 (Credential Harvesting)")
 
-        return reply_text, mitre_tags, category
-    except Exception as e:
-        return f"Terjadi kesalahan saat memproses permintaan AI: {str(e)}", [], "Informasi Umum"
+    # Tentukan Kategori
+    category = "Informasi Umum"
+    if "AKTIF BERBAHAYA" in reply_text.upper():
+        category = "Aktif Berbahaya (Malicious)"
+    elif "ILEGAL" in reply_text.upper() or "MALVERTISING" in reply_text.upper():
+        category = "Ilegal (Risiko Iklan/Malvertising)"
+    elif "RESMI" in reply_text.upper() or "AMAN" in reply_text.upper():
+        category = "Resmi/Aman"
+
+    return reply_text, mitre_tags, category
