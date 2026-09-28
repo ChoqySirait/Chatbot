@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 
 class Message(BaseModel):
     role: Literal["user", "assistant"]
@@ -8,7 +8,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
     history: List[Message] = Field(default_factory=list)
-    image_base64: Optional[str] = None  # Format data URI / base64 string
+    image_base64: Optional[str] = None
 
 class HeuristicResult(BaseModel):
     has_suspicious_elements: bool
@@ -16,8 +16,7 @@ class HeuristicResult(BaseModel):
     defanged_urls: List[str] = Field(default_factory=list)
     risk_flags: List[str] = Field(default_factory=list)
     heuristic_score: int
-    web_accessible: Optional[bool] = None
-    web_title: Optional[str] = None
+    network_intel: Optional[Dict[str, Any]] = None
 
 class ChatResponse(BaseModel):
     reply: str
