@@ -45,9 +45,12 @@ SecurAI adalah sistem asisten keamanan siber interaktif berbasis *Hybrid Engine*
          ├── Dynamic Risk Meter & Heuristic Badges
          └── Ekspor Tiket Laporan Insiden (.MD / .JSON)
 
+```
+
 ---
 
-✨ Fitur Unggulan
+✨ Fitur Unggulan :
+
 🔬 Safe Web Inspection: Menginspeksi tautan tanpa risiko SSRF (Server-Side Request Forgery).
 
 🖼️ Multimodal OCR & Vision: Unggah tangkapan layar jika situs memblokir bot otomatis (Cloudflare/DDoS-Guard).
@@ -58,5 +61,5 @@ SecurAI adalah sistem asisten keamanan siber interaktif berbasis *Hybrid Engine*
 
 📋 Export Incident Report: Unduh ringkasan audit insiden dalam satu klik untuk dokumentasi kepatuhan.
 
----
+
 
