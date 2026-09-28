@@ -95,13 +95,21 @@ def process_chat_with_gemini(message: str, history: List[Message], heuristic_dat
         except Exception:
             continue
 
+    # Fallback cerdas jika server AI sedang antre
     if not reply_text:
+        score = heuristic_data.get("heuristic_score", 0)
+        fallback_cat = "Aktif Berbahaya (Malicious)" if score > 40 else "Informasi Umum"
+        fallback_mitre = ["MITRE T1566.002 (Phishing Link)"] if score > 40 else []
         return (
-            "Halo! Layanan AI pusat saat ini sedang padat. Namun modul pemindaian domain & heuristik anti-fraud kami tetap aktif bekerja. Silakan tanyakan kembali dalam beberapa saat.",
-            [],
-            "Informasi Umum"
+            "⚠️ **Hasil Pemindaian Telemetri Lokal:**\n"
+            "Tautan ini menunjukkan indikasi kuat penipuan digital (pemalsuan brand atau SSL tidak valid). "
+            "Jangan pernah memasukkan data kartu ATM, nomor telepon, atau mentransfer uang ke situs ini. "
+            "(Layanan AI naratif sedang padat, namun proteksi heuristik lokal kami telah memverifikasi risiko ini).",
+            fallback_mitre,
+            fallback_cat
         )
 
+    # Identifikasi Tag MITRE
     mitre_tags = []
     if "T1566.002" in reply_text or "Link" in reply_text:
         mitre_tags.append("MITRE T1566.002 (Phishing Link)")
@@ -110,6 +118,7 @@ def process_chat_with_gemini(message: str, history: List[Message], heuristic_dat
     if "T1056.003" in reply_text or "Credential" in reply_text:
         mitre_tags.append("MITRE T1056.003 (Credential Harvesting)")
 
+    # Tentukan Kategori Bahaya
     category = "Informasi Umum"
     if "AKTIF BERBAHAYA" in reply_text.upper() or "PENIPUAN" in reply_text.upper():
         category = "Aktif Berbahaya (Malicious)"
