@@ -6,6 +6,13 @@ const imageUpload = document.getElementById('image-upload');
 const imagePreviewContainer = document.getElementById('image-preview-container');
 const imagePreview = document.getElementById('image-preview');
 
+// Komponen Telemetri Panel Kanan
+const intelBadge = document.getElementById('intel-badge');
+const intelDomain = document.getElementById('intel-domain');
+const intelAge = document.getElementById('intel-age');
+const intelSsl = document.getElementById('intel-ssl');
+const intelTitle = document.getElementById('intel-title');
+
 let chatHistory = [];
 let attachedImageBase64 = null;
 
@@ -21,7 +28,7 @@ userInput.addEventListener('keydown', function(e) {
     }
 });
 
-// Paste screenshot langsung (Ctrl + V)
+// Fitur Paste Screenshot Langsung (Ctrl + V)
 window.addEventListener('paste', (e) => {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     for (let item of items) {
@@ -54,7 +61,7 @@ function removeImage() {
     imagePreviewContainer.classList.add('hidden');
 }
 
-// Hanya mengisi input dan fokus, TIDAK auto-send
+// Hanya memasukkan teks ke input (TIDAK auto-submit)
 function fillInput(text) {
     userInput.value = text;
     userInput.style.height = 'auto';
@@ -62,15 +69,35 @@ function fillInput(text) {
     userInput.focus();
 }
 
+function updateTelemetryPanel(networkIntel, category, score) {
+    if (!networkIntel) return;
+    
+    intelDomain.textContent = networkIntel.domain || "-";
+    intelAge.textContent = networkIntel.domain_age || "Tidak Diketahui";
+    intelSsl.textContent = networkIntel.ssl_valid ? "Valid (HTTPS)" : "Tidak Valid";
+    intelTitle.textContent = networkIntel.page_title || "Tanpa Judul";
+
+    if (category === "Aktif Berbahaya (Malicious)") {
+        intelBadge.className = "text-[10px] font-mono bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded";
+        intelBadge.textContent = `RISK ${score}/100`;
+    } else if (category === "Ilegal (Risiko Iklan/Malvertising)") {
+        intelBadge.className = "text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800 px-2 py-0.5 rounded";
+        intelBadge.textContent = "PIRACY/ADS";
+    } else if (category === "Resmi/Aman") {
+        intelBadge.className = "text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded";
+        intelBadge.textContent = "SAFE/VERIFIED";
+    }
+}
+
 function appendMessage(role, text, data = {}) {
     const isUser = role === 'user';
     const wrapper = document.createElement('div');
-    wrapper.className = isUser ? 'flex justify-end' : 'flex gap-3 max-w-3xl';
+    wrapper.className = isUser ? 'flex justify-end' : 'flex gap-3 max-w-2xl';
 
     if (isUser) {
         let imgTag = data.image ? `<img src="${data.image}" class="max-w-xs rounded-xl mb-2 border border-cyan-700 shadow-md">` : '';
         wrapper.innerHTML = `
-            <div class="bg-cyan-950/70 border border-cyan-800/60 text-slate-100 p-3.5 rounded-2xl rounded-tr-none text-sm max-w-xl shadow-md">
+            <div class="bg-cyan-950/70 border border-cyan-800/60 text-slate-100 p-3.5 rounded-2xl rounded-tr-none text-sm max-w-lg shadow-md">
                 ${imgTag}
                 <div>${escapeHtml(text)}</div>
             </div>
@@ -80,33 +107,20 @@ function appendMessage(role, text, data = {}) {
         const mitreTags = data.mitre_tags || [];
         const category = data.threat_category || "Informasi Umum";
 
-        // Tentukan apakah pesan ini memuat investigasi insiden/tautan
-        const isIncident = (heuristics && (heuristics.has_suspicious_elements || heuristics.detected_urls.length > 0)) 
-                            || (category !== "Informasi Umum") 
-                            || data.image;
-
         let badgeHeader = '';
         if (heuristics && heuristics.has_suspicious_elements) {
             const score = heuristics.heuristic_score;
             const badgeColor = score > 50 ? 'rose' : score > 20 ? 'amber' : 'yellow';
-            
-            let defangedList = heuristics.defanged_urls.length > 0 
-                ? `<div class="mt-1 font-mono text-[11px] text-slate-300"><strong>Defanged URLs:</strong> ${heuristics.defanged_urls.join(', ')}</div>` 
-                : '';
-
-            let titleInfo = heuristics.web_title ? `<div class="text-[11px] text-slate-400 mt-1"><strong>Judul Halaman:</strong> ${escapeHtml(heuristics.web_title)}</div>` : '';
 
             badgeHeader = `
                 <div class="mb-3 p-3.5 rounded-xl bg-${badgeColor}-950/40 border border-${badgeColor}-800/60 text-xs shadow-inner">
                     <div class="flex items-center justify-between font-semibold text-${badgeColor}-400 mb-1">
-                        <span><i class="fa-solid fa-triangle-exclamation"></i> Threat Telemetry (Score: ${score}/100)</span>
+                        <span><i class="fa-solid fa-shield-halved"></i> Deteksi Perlindungan Konsumen (Skor: ${score}/100)</span>
                         <span class="px-2 py-0.5 rounded bg-slate-900 border border-${badgeColor}-800 text-[10px] uppercase font-mono">${category}</span>
                     </div>
                     <ul class="list-disc list-inside space-y-0.5 text-slate-300">
                         ${heuristics.risk_flags.map(f => `<li>${escapeHtml(f)}</li>`).join('')}
                     </ul>
-                    ${defangedList}
-                    ${titleInfo}
                 </div>
             `;
         }
@@ -120,20 +134,6 @@ function appendMessage(role, text, data = {}) {
             `;
         }
 
-        // HANYA tampilkan footer Laporan Insiden jika ini adalah investigasi ancaman/link
-        let incidentFooter = '';
-        if (isIncident) {
-            const reportId = 'INC-' + Math.floor(100000 + Math.random() * 900000);
-            incidentFooter = `
-                <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
-                    <span class="font-mono text-[10px]">Case ID: ${reportId}</span>
-                    <button onclick="exportReport('${reportId}', \`${escapeForExport(text)}\`, '${category}')" class="hover:text-cyan-400 transition flex items-center gap-1 font-mono text-[11px]">
-                        <i class="fa-solid fa-download"></i> Unduh Laporan Insiden (.md)
-                    </button>
-                </div>
-            `;
-        }
-
         wrapper.innerHTML = `
             <div class="w-8 h-8 rounded-xl bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs shadow-inner">
                 <i class="fa-solid fa-robot"></i>
@@ -142,7 +142,6 @@ function appendMessage(role, text, data = {}) {
                 ${badgeHeader}
                 ${mitreBadges}
                 <div class="whitespace-pre-wrap leading-relaxed">${formatMarkdown(text)}</div>
-                ${incidentFooter}
             </div>
         `;
     }
@@ -171,7 +170,7 @@ chatForm.addEventListener('submit', async (e) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                message: message || "Tolong analisis gambar/link berikut:", 
+                message: message || "Tolong analisis gambar/bukti ini:", 
                 history: chatHistory,
                 image_base64: imgToSend
             })
@@ -183,35 +182,70 @@ chatForm.addEventListener('submit', async (e) => {
             chatHistory.push({ role: 'user', content: message });
             chatHistory.push({ role: 'assistant', content: data.reply });
             if (chatHistory.length > 8) chatHistory = chatHistory.slice(-8);
+
+            // Perbarui panel intelijen sisi kanan secara live
+            if (data.heuristics && data.heuristics.network_intel) {
+                updateTelemetryPanel(data.heuristics.network_intel, data.threat_category, data.heuristics.heuristic_score);
+            }
         } else {
             appendMessage('assistant', `⚠️ Kesalahan Server: ${data.detail || 'Gagal memproses pesan.'}`);
         }
     } catch (err) {
-        appendMessage('assistant', '⚠️ Gagal tersambung ke server SecurAI.');
+        appendMessage('assistant', '⚠️ Gagal tersambung ke backend SecurAI.');
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i>';
     }
 });
 
-function exportReport(reportId, content, category) {
-    const reportMd = `# SecurAI Security Incident Report
-**Incident ID:** ${reportId}
-**Date:** ${new Date().toISOString()}
-**Threat Classification:** ${category}
+// Generator Surat Permohonan Blokir Rekening Bank
+function generateDisputeLetter() {
+    const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+    const template = `SURAT PERMOHONAN PEMBLOKIRAN REKENING PENIPU & MEDIASI FRAUD
+Tanggal: ${today}
 
----
-### Investigation Findings:
-${content}
+Kepada Yth.
+Bagian Fraud & Risk Management / Customer Care
+Bank [Nama Bank Tujuan / Bank Penipu]
+Di Tempat
 
----
-*Generated by SecurAI - SOC L1 Triage Cockpit*`;
+Dengan hormat,
+Saya yang bertanda tangan di bawah ini:
+Nama Lengkap      : [Nama Anda]
+No. KTP/NIK       : [NIK Anda]
+No. HP/WhatsApp   : [Nomor HP Anda]
+Email             : [Email Anda]
 
-    const blob = new Blob([reportMd], { type: 'text/markdown' });
+Dengan ini mengajukan permohonan pemblokiran dan penahanan dana terhadap rekening terduga penipuan transaksi digital dengan rincian sebagai berikut:
+
+DATA REKENING TERLAPOR (PELAKU):
+- Nama Bank Tujuan : [Contoh: Bank BCA / Mandiri / BRI / DANA]
+- No. Rekening     : [Nomor Rekening Pelaku]
+- Nama Pemilik     : [Nama Pemilik Rekening Pelaku]
+- Jumlah Kerugian  : Rp [Nominal Transfer]
+- Waktu Transaksi  : [Tanggal & Jam Transfer]
+
+KRONOLOGI SINGKAT:
+Pada tanggal [Tanggal Kejadian], saya melakukan transaksi [Pembelian barang / Jasa / Investasi] melalui media sosial/tautan [Sebutkan Link/Platform]. Setelah dana berhasil ditransfer, pihak terlapor memutus komunikasi dan memblokir kontak saya serta tidak memenuhi kewajibannya.
+
+Bersama surat ini, saya lampirkan dokumen pendukung:
+1. Tangkapan layar bukti transfer / mutasi bank.
+2. Tangkapan layar percakapan (chat) penipuan.
+3. Surat Tanda Penerimaan Laporan (STPL) dari Kepolisian setempat.
+4. Bukti laporan resmi di portal CekRekening.id.
+
+Demikian permohonan ini saya ajukan demi mencegah rekening tersebut digunakan untuk merugikan korban lainnya. Atas perhatian dan kerja sama pihak bank, saya ucapkan terima kasih.
+
+Hormat saya,
+
+( [Nama Lengkap Anda] )
+`;
+
+    const blob = new Blob([template], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${reportId}-Report.md`;
+    a.download = `Surat-Permohonan-Blokir-Rekening-Penipu.txt`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -219,17 +253,19 @@ ${content}
 function clearSession() {
     chatHistory = [];
     chatContainer.innerHTML = '';
-    appendMessage('assistant', 'Sesi telah direset. Silakan ajukan pertanyaan atau tempelkan bukti insiden baru.');
+    appendMessage('assistant', 'Sesi telah direset. Silakan tanyakan hal lain atau kirim tautan baru untuk diperiksa.');
+    intelDomain.textContent = "-";
+    intelAge.textContent = "-";
+    intelSsl.textContent = "-";
+    intelTitle.textContent = "-";
+    intelBadge.className = "text-[10px] font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded";
+    intelBadge.textContent = "STANDBY";
 }
 
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function escapeForExport(text) {
-    return text.replace(/`/g, '\\`').replace(/\$/g, '\\$');
 }
 
 function formatMarkdown(text) {
