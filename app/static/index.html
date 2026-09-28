@@ -3,206 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecurAI — Incident & Phishing Advisor</title>
+    <title>SecurAI — SOC Incident Triage Cockpit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #090d16; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        textarea { resize: none; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 flex h-screen overflow-hidden font-sans">
 
-    <!-- Sidebar Info -->
-    <aside class="w-80 bg-slate-900 border-r border-slate-800 p-5 flex flex-col justify-between hidden md:flex">
+    <!-- Sidebar: Panel Kontrol & Kasus Cepat -->
+    <aside class="w-84 bg-slate-900/90 border-r border-slate-800 p-5 flex flex-col justify-between hidden md:flex backdrop-blur-md">
         <div>
+            <!-- Header Brand -->
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-950/50">
                     <i class="fa-solid fa-shield-halved text-xl"></i>
                 </div>
                 <div>
-                    <h2 class="font-bold text-base leading-tight">SecurAI Triage</h2>
-                    <span class="text-xs text-emerald-400 flex items-center gap-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Hybrid Engine Active
+                    <h2 class="font-bold text-base tracking-wide text-white">SecurAI Console</h2>
+                    <span class="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> SOC Triage Engine Active
                     </span>
                 </div>
             </div>
 
-            <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                Asisten keamanan interaktif berbasis AI & inspeksi heuristik. Tempelkan link, SMS penipuan, atau tanyakan konsep cybersecurity.
+            <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+                Asisten investigasi ancaman siber, analisis tautan *anti-malvertising*, dan inspeksi visual berbasis AI.
             </p>
 
-            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Prompt Cepat:</h3>
+            <!-- Kategori Kasus Cepat (Klik Hanya Mengisi Input, Tidak Auto-Send) -->
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-cyan-400"></i> Contoh Kasus & Pertanyaan:
+            </h3>
             <div class="space-y-2">
-                <button onclick="quickPrompt('Bagaimana cara mengenali file APK penipuan berkedok undangan pernikahan atau kurir?')" class="w-full text-left text-xs bg-slate-800 hover:bg-slate-700/80 p-2.5 rounded-lg border border-slate-700 text-slate-300 transition">
-                    📱 Modus File APK Kurir / Undangan
+                <button type="button" onclick="fillInput('Tolong verifikasi apakah situs baca komik ini aman atau memuat iklan berbahaya: https://komik-indo-update.xyz')" class="w-full text-left text-xs bg-slate-800/70 hover:bg-slate-800 p-3 rounded-xl border border-slate-700/60 text-slate-300 transition">
+                    📖 <strong>Situs Komik / Pirasi</strong> (Cek Malvertising)
                 </button>
-                <button onclick="quickPrompt('Tolong periksa apakah link ini aman: http://192.168.1.1/bca-update-rekening.php')" class="w-full text-left text-xs bg-slate-800 hover:bg-slate-700/80 p-2.5 rounded-lg border border-slate-700 text-slate-300 transition">
-                    🔗 Uji Contoh Link Berbahaya
+                <button type="button" onclick="fillInput('Saya menerima SMS mencurigakan: Rekening Anda diblokir, unduh verifikasi APK di http://192.168.1.100/bca-update.apk')" class="w-full text-left text-xs bg-slate-800/70 hover:bg-slate-800 p-3 rounded-xl border border-slate-700/60 text-slate-300 transition">
+                    🚨 <strong>SMS Phishing & APK Trojan</strong>
                 </button>
-                <button onclick="quickPrompt('Apa langkah darurat jika saya baru saja terlanjur memasukkan PIN di situs phishing?')" class="w-full text-left text-xs bg-slate-800 hover:bg-slate-700/80 p-2.5 rounded-lg border border-slate-700 text-slate-300 transition">
-                    🚨 Penanganan Pasca-Insiden
+                <button type="button" onclick="fillInput('Apa tindakan darurat yang harus diambil dalam 15 menit pertama jika karyawan salah memasukkan password di portal phishing?')" class="w-full text-left text-xs bg-slate-800/70 hover:bg-slate-800 p-3 rounded-xl border border-slate-700/60 text-slate-300 transition">
+                    ⏳ <strong>SOP Tanggap Darurat</strong>
                 </button>
             </div>
         </div>
 
-        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
-            SecurAI v1.0 • Information Systems Capstone
+        <!-- Footer Info -->
+        <div class="text-[11px] font-mono text-slate-500 border-t border-slate-800 pt-4 flex justify-between items-center">
+            <span>Model: Gemini 3.8 Flash</span>
+            <span class="bg-cyan-950 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800">SOC L1</span>
         </div>
     </aside>
 
-    <!-- Main Chat Workspace -->
-    <main class="flex-1 flex flex-col h-full bg-slate-950">
-        <!-- Header Mobile -->
-        <header class="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-terminal text-cyan-400"></i>
-                <span class="font-semibold text-sm">Security Incident Console</span>
+    <!-- Workspace Utama -->
+    <main class="flex-1 flex flex-col h-full bg-slate-950 relative">
+        <!-- Topbar -->
+        <header class="h-14 border-b border-slate-800 bg-slate-900/60 px-6 flex items-center justify-between backdrop-blur-md">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-terminal text-cyan-400 text-sm"></i>
+                <span class="font-semibold text-sm tracking-wide text-slate-200">Incident Investigation Terminal</span>
             </div>
-            <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1">
-                <i class="fa-solid fa-trash-can"></i> Reset Sesi
+            <button onclick="clearSession()" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-800">
+                <i class="fa-solid fa-arrow-rotate-right"></i> Reset Sesi
             </button>
         </header>
 
-        <!-- Chat Container -->
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
-            <!-- Pesan Pembuka Bot -->
+        <!-- Wadah Percakapan & Telemetri -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 custom-scroll max-w-4xl w-full mx-auto">
+            <!-- Pesan Sambutan Awal -->
             <div class="flex gap-3 max-w-3xl">
-                <div class="w-8 h-8 rounded-full bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs">
+                <div class="w-8 h-8 rounded-lg bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs">
                     <i class="fa-solid fa-robot"></i>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm">
-                    Halo! Saya <strong>SecurAI</strong>, asisten analisis keamanan siber Anda. Anda bisa menanyakan teori keamanan atau langsung menempelkan teks/tautan mencurigakan untuk saya audit.
+                    Selamat datang di konsol <strong>SecurAI</strong>. Anda dapat mengajukan pertanyaan keamanan, menempelkan tautan mencurigakan untuk diinspeksi, atau mengunggah tangkapan layar situs yang diblokir bot untuk kami bedah secara forensik.
                 </div>
             </div>
         </div>
 
-        <!-- Chat Input Bar -->
-        <footer class="p-4 border-t border-slate-800 bg-slate-900/80">
-            <form id="chat-form" class="max-w-4xl mx-auto flex gap-2">
-                <input type="text" id="user-input" autocomplete="off" placeholder="Tanyakan sesuatu atau tempel tautan/pesan mencurigakan..." 
-                       class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 text-slate-100 placeholder-slate-500 transition">
-                <button type="submit" id="submit-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white px-5 py-3 rounded-xl font-medium text-sm flex items-center gap-2 transition">
-                    <span>Kirim</span>
+        <!-- Preview Screenshot (Jika pengguna mengunggah gambar) -->
+        <div id="image-preview-container" class="hidden px-6 py-2 bg-slate-900 border-t border-slate-800 max-w-4xl mx-auto w-full flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img id="image-preview" src="" alt="Screenshot" class="w-12 h-12 object-cover rounded-lg border border-cyan-500">
+                <div class="text-xs">
+                    <p class="font-semibold text-slate-200">Tangkapan layar dilampirkan</p>
+                    <p class="text-slate-400 text-[11px]">Siap dianalisis oleh modul AI Vision</p>
+                </div>
+            </div>
+            <button onclick="removeImage()" class="text-xs text-rose-400 hover:text-rose-300 p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Area Input -->
+        <footer class="p-4 border-t border-slate-800 bg-slate-900/70 backdrop-blur-md">
+            <form id="chat-form" class="max-w-4xl mx-auto flex items-end gap-2 bg-slate-950 border border-slate-700/80 rounded-2xl p-2 focus-within:border-cyan-500 transition">
+                <!-- Tombol Upload Screenshot -->
+                <label for="image-upload" class="p-2.5 text-slate-400 hover:text-cyan-400 cursor-pointer rounded-xl hover:bg-slate-900 transition" title="Unggah tangkapan layar situs">
+                    <i class="fa-solid fa-camera"></i>
+                    <input type="file" id="image-upload" accept="image/*" class="hidden">
+                </label>
+
+                <!-- Input Textarea Responsif -->
+                <textarea id="user-input" rows="1" placeholder="Tempel link, teks pesan, atau tanyakan skenario keamanan... (Enter untuk kirim)" 
+                          class="flex-1 bg-transparent border-0 px-2 py-2 text-sm focus:outline-none text-slate-100 placeholder-slate-500 max-h-32 custom-scroll"></textarea>
+
+                <!-- Tombol Kirim -->
+                <button type="submit" id="submit-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition shadow-md shadow-cyan-950">
                     <i class="fa-solid fa-paper-plane text-xs"></i>
                 </button>
             </form>
         </footer>
     </main>
 
-    <script>
-        const chatForm = document.getElementById('chat-form');
-        const userInput = document.getElementById('user-input');
-        const chatContainer = document.getElementById('chat-messages');
-        const submitBtn = document.getElementById('submit-btn');
-
-        let chatHistory = [];
-
-        function appendMessage(role, text, heuristics = null) {
-            const isUser = role === 'user';
-            const wrapper = document.createElement('div');
-            wrapper.className = isUser ? 'flex justify-end' : 'flex gap-3 max-w-3xl';
-
-            if (isUser) {
-                wrapper.innerHTML = `
-                    <div class="bg-cyan-950/70 border border-cyan-800/60 text-slate-100 p-3.5 rounded-2xl rounded-tr-none text-sm max-w-xl">
-                        ${escapeHtml(text)}
-                    </div>
-                `;
-            } else {
-                let heuristicBadge = '';
-                if (heuristics && heuristics.has_suspicious_elements) {
-                    const score = heuristics.heuristic_score;
-                    const color = score > 60 ? 'rose' : score > 30 ? 'amber' : 'yellow';
-                    heuristicBadge = `
-                        <div class="mb-3 p-3 rounded-lg bg-${color}-950/40 border border-${color}-800/60 text-xs">
-                            <div class="flex items-center justify-between font-semibold text-${color}-400 mb-1">
-                                <span><i class="fa-solid fa-triangle-exclamation"></i> Heuristic Warning (Risk Score: ${score}/100)</span>
-                            </div>
-                            <ul class="list-disc list-inside space-y-0.5 text-slate-300">
-                                ${heuristics.risk_flags.map(f => `<li>${escapeHtml(f)}</li>`).join('')}
-                            </ul>
-                        </div>
-                    `;
-                }
-
-                wrapper.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs">
-                        <i class="fa-solid fa-robot"></i>
-                    </div>
-                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm">
-                        ${heuristicBadge}
-                        <div class="whitespace-pre-wrap">${formatMarkdown(text)}</div>
-                    </div>
-                `;
-            }
-
-            chatContainer.appendChild(wrapper);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            appendMessage('user', message);
-            userInput.value = '';
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>';
-
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message, history: chatHistory })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    appendMessage('assistant', data.reply, data.heuristics);
-                    chatHistory.push({ role: 'user', content: message });
-                    chatHistory.push({ role: 'assistant', content: data.reply });
-                    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
-                } else {
-                    appendMessage('assistant', `⚠️ Error: ${data.detail || 'Gagal memproses pesan.'}`);
-                }
-            } catch (err) {
-                appendMessage('assistant', '⚠️ Gagal terhubung ke server backend.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>Kirim</span> <i class="fa-solid fa-paper-plane text-xs"></i>';
-            }
-        });
-
-        function quickPrompt(text) {
-            userInput.value = text;
-            chatForm.dispatchEvent(new Event('submit'));
-        }
-
-        function clearChat() {
-            chatHistory = [];
-            chatContainer.innerHTML = '';
-            appendMessage('assistant', 'Sesi berhasil direset. Silakan tanyakan hal lain atau kirim tautan baru.');
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function formatMarkdown(text) {
-            // Sederhana: bold text & bullet points
-            let formatted = escapeHtml(text);
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/^\s*\*\s(.*)$/gm, '• $1');
-            return formatted;
-        }
-    </script>
     <script src="/static/app.js"></script>
-</body>
-</html>
 </body>
 </html>
