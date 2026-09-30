@@ -1,10 +1,12 @@
 import socket
 import ssl
+import hashlib
 import datetime
 from urllib.parse import urlparse
 import httpx
 from typing import Dict, Any
 
+# Blok kode ini mengekstrak nama host/domain murni dari tautan URL
 def get_domain_from_url(url: str) -> str:
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
@@ -12,15 +14,19 @@ def get_domain_from_url(url: str) -> str:
     domain = parsed.hostname or url.split('/')[0]
     return domain.lower().strip()
 
+# Blok kode ini membuat hash SHA-256 sebagai segel integritas bukti digital
+def generate_evidence_hash(data: str) -> str:
+    return hashlib.sha256(data.encode('utf-8')).hexdigest()[:16]
+
+# Blok kode ini memeriksa keaslian dan masa aktif sertifikat SSL domain
 def inspect_ssl_certificate(domain: str) -> Dict[str, Any]:
-    """Menginspeksi sertifikat SSL domain publik secara langsung."""
     try:
         context = ssl.create_default_context()
         with socket.create_connection((domain, 443), timeout=3.0) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
                 issuer = dict(x[0] for x in cert.get('issuer', []))
-                issuer_org = issuer.get('organizationName', 'Unknown CA')
+                issuer_org = issuer.get('organizationName', 'Penerbit SSL Umum')
                 
                 not_after = cert.get('notAfter')
                 expiry_date = datetime.datetime.strptime(not_after, '%b %d %H:%M:%S %Y %Z') if not_after else None
@@ -35,18 +41,17 @@ def inspect_ssl_certificate(domain: str) -> Dict[str, Any]:
     except Exception:
         return {
             "valid": False,
-            "issuer": "Tidak Terdeteksi / Tidak Menggunakan SSL",
+            "issuer": "Tidak Terpasang / Sertifikat Bermasalah",
             "days_remaining": 0,
             "is_free_cert": False
         }
 
+# Blok kode ini memeriksa tanggal registrasi dan umur domain via protokol RDAP resmi
 def inspect_domain_registration(domain: str) -> Dict[str, Any]:
-    """Mengambil umur dan informasi pendaftaran domain via protokol RDAP resmi."""
-    # Abaikan IP address
     if any(char.isdigit() for char in domain.split('.')):
         parts = domain.split('.')
         if len(parts) == 4 and all(p.isdigit() for p in parts):
-            return {"age_days": None, "creation_date": "Alamat IP Mentah", "registrar": "None"}
+            return {"age_days": None, "creation_date": "Alamat IP Numerik", "registrar": "None"}
 
     rdap_url = f"https://rdap.org/domain/{domain}"
     try:
@@ -67,9 +72,9 @@ def inspect_domain_registration(domain: str) -> Dict[str, Any]:
                     return {
                         "age_days": age_days,
                         "creation_date": reg_date.strftime("%d %b %Y"),
-                        "registrar": data.get("entities", [{}])[0].get("vcardArray", [None, [[]]])[1][1][3] if data.get("entities") else "Terdaftar"
+                        "registrar": data.get("entities", [{}])[0].get("vcardArray", [None, [[]]])[1][1][3] if data.get("entities") else "Penyedia Domain"
                     }
     except Exception:
         pass
 
-    return {"age_days": None, "creation_date": "Data RDAP Terbatas", "registrar": "Umum"}
+    return {"age_days": None, "creation_date": "Data RDAP Terbatas", "registrar": "Registrar Umum"}

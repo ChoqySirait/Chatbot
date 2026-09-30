@@ -3,152 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecurAI — Consumer Protection & Anti-Fraud Cockpit</title>
+    <title>SecurAI — Consumer Protection & Anti-Fraud Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #090d16; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #081220; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #1b2e4b; border-radius: 4px; }
         textarea { resize: none; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 flex h-screen overflow-hidden font-sans">
+<body class="bg-[#081220] text-slate-100 flex h-screen overflow-hidden font-sans antialiased">
 
-    <!-- Kolom Kiri: Chat Konsultasi Interaktif -->
-    <section class="flex-1 flex flex-col h-full border-r border-slate-800 bg-slate-950">
-        <!-- Top Navbar -->
-        <header class="h-14 border-b border-slate-800 bg-slate-900/60 px-5 flex items-center justify-between backdrop-blur-md">
+    <!-- Kolom Kiri: Chat Konsultasi & Triage -->
+    <section class="flex-1 flex flex-col h-full border-r border-[#162740] bg-[#081220]">
+        <!-- Header Konsol -->
+        <header class="h-16 border-b border-[#162740] bg-[#0c1a2e]/90 px-6 flex items-center justify-between backdrop-blur-md">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                    <i class="fa-solid fa-shield-halved"></i>
+                <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-sm">
+                    <i class="fa-solid fa-shield-halved text-base"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-sm text-slate-100 leading-none">SecurAI ConsumerGuard</h1>
-                    <span class="text-[10px] text-cyan-400 font-mono">Digital Anti-Fraud & Consumer Protection</span>
+                    <h1 class="font-semibold text-sm tracking-wide text-slate-100">SecurAI ConsumerGuard</h1>
+                    <span class="text-[11px] text-slate-400">Verifikasi Tautan & Pencegahan Penipuan Digital</span>
                 </div>
             </div>
-            <button onclick="clearSession()" class="text-xs text-slate-400 hover:text-rose-400 transition flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-slate-800">
-                <i class="fa-solid fa-arrow-rotate-right"></i> Reset Sesi
+            <button onclick="clearSession()" class="text-xs text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-[#13233c] border border-transparent hover:border-[#1e3557]">
+                <i class="fa-solid fa-rotate-left text-xs"></i> Reset Sesi
             </button>
         </header>
 
-        <!-- Area Obrolan -->
+        <!-- Area Pesan Masuk -->
         <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scroll">
             <div class="flex gap-3 max-w-2xl">
-                <div class="w-8 h-8 rounded-xl bg-cyan-600/20 border border-cyan-500/40 flex-shrink-0 flex items-center justify-center text-cyan-400 text-xs">
+                <div class="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex-shrink-0 flex items-center justify-center text-blue-400 text-xs">
                     <i class="fa-solid fa-robot"></i>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm">
-                    Halo! Saya <strong>SecurAI</strong>, asisten perlindungan konsumen digital dan pencegahan penipuan online. Anda bisa berkonsultasi seputar keamanan digital, mengecek tautan toko/undian mencurigakan, atau meminta panduan langkah darurat jika mengalami penipuan transaksi.
+                <div class="bg-[#0e1e36] border border-[#182d4d] p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm">
+                    Ruang konsultasi siap. Ada tautan toko online, tawaran promo, atau pesan mencurigakan yang ingin kita periksa bersama?
                 </div>
             </div>
         </div>
 
-        <!-- Tombol Contoh Kasus Cepat (Klik hanya mengisi input, TIDAK auto-submit) -->
-        <div class="px-4 py-2 border-t border-slate-800/80 bg-slate-900/40 flex gap-2 overflow-x-auto custom-scroll text-xs">
-            <button onclick="fillInput('Saya baru saja mentransfer uang ke penjual online di Instagram tapi akun saya langsung diblokir. Apa langkah darurat yang harus saya lakukan sekarang?')" class="whitespace-nowrap bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 transition">
-                💸 Tertipu Transfer Online
+        <!-- Tombol Contoh Kasus Cepat (Klik mengisi input tanpa auto-send) -->
+        <div class="px-5 py-2.5 border-t border-[#14243b] bg-[#0a1526] flex gap-2 overflow-x-auto custom-scroll text-xs">
+            <button onclick="fillInput('Ada yang kirim promo diskon 90% katanya dari Shopee di link ini https://shopee-diskon90-promo.online, ini asli ga ya?')" class="whitespace-nowrap bg-[#0f223d] hover:bg-[#152e52] px-3.5 py-1.5 rounded-lg border border-[#1b365c] text-slate-300 transition">
+                🛒 Cek Tautan Promo
             </button>
-            <button onclick="fillInput('Tolong periksa apakah toko online ini aman atau terindikasi scam: https://shopee-diskon90-promo.online')" class="whitespace-nowrap bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 transition">
-                🛒 Cek Tautan Toko Online
+            <button onclick="fillInput('Saya dihubungi admin bank di WhatsApp yang pakai centang biru minta foto kartu ATM untuk verifikasi data, apakah itu resmi?')" class="whitespace-nowrap bg-[#0f223d] hover:bg-[#152e52] px-3.5 py-1.5 rounded-lg border border-[#1b365c] text-slate-300 transition">
+                📱 Akun Centang Biru Palsu
             </button>
-            <button onclick="fillInput('Saya sering baca komik di https://komikcast01.com, apakah situs itu berbahaya bagi data hp saya?')" class="whitespace-nowrap bg-slate-800/80 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-300 transition">
-                📖 Cek Situs Komik / Bajakan
+            <button onclick="fillInput('Saya sering baca komik di https://komikcast01.com, apakah situs itu aman dan ada risiko pencurian data?')" class="whitespace-nowrap bg-[#0f223d] hover:bg-[#152e52] px-3.5 py-1.5 rounded-lg border border-[#1b365c] text-slate-300 transition">
+                📖 Evaluasi Situs Komik
             </button>
         </div>
 
-        <!-- Preview Screenshot Jika Ada -->
-        <div id="image-preview-container" class="hidden px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between">
+        <!-- Pratinjau Tangkapan Layar (Jika ada gambar dilampirkan) -->
+        <div id="image-preview-container" class="hidden px-5 py-2.5 bg-[#0b182b] border-t border-[#162740] flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img id="image-preview" src="" alt="Screenshot" class="w-10 h-10 object-cover rounded-lg border border-cyan-500">
-                <span class="text-xs text-slate-300 font-medium">Tangkapan layar siap diperiksa</span>
+                <img id="image-preview" src="" alt="Pratinjau" class="w-10 h-10 object-cover rounded-lg border border-blue-500">
+                <span class="text-xs text-slate-300">Tangkapan layar siap dianalisis</span>
             </div>
-            <button onclick="removeImage()" class="text-xs text-rose-400 hover:text-rose-300">Hapus</button>
+            <button onclick="removeImage()" class="text-xs text-rose-400 hover:text-rose-300 font-medium">Batal</button>
         </div>
 
-        <!-- Chat Input Bar -->
-        <footer class="p-3 border-t border-slate-800 bg-slate-900/60">
-            <form id="chat-form" class="flex items-end gap-2 bg-slate-950 border border-slate-700 rounded-2xl p-2 focus-within:border-cyan-500 transition">
-                <label for="image-upload" class="p-2.5 text-slate-400 hover:text-cyan-400 cursor-pointer rounded-xl hover:bg-slate-900 transition" title="Unggah Screenshot Bukti">
+        <!-- Kolom Ketik Chat -->
+        <footer class="p-3.5 border-t border-[#162740] bg-[#0c1a2e]/90">
+            <form id="chat-form" class="flex items-end gap-2 bg-[#081220] border border-[#1a3153] rounded-2xl p-2 focus-within:border-blue-500 transition">
+                <label for="image-upload" class="p-2.5 text-slate-400 hover:text-blue-400 cursor-pointer rounded-xl hover:bg-[#0f223d] transition" title="Lampirkan Screenshot Bukti">
                     <i class="fa-solid fa-camera"></i>
                     <input type="file" id="image-upload" accept="image/*" class="hidden">
                 </label>
-                <textarea id="user-input" rows="1" placeholder="Ketik pertanyaan atau tempel bukti link/pesan penipuan..." 
-                          class="flex-1 bg-transparent border-0 px-2 py-2 text-sm focus:outline-none text-slate-100 placeholder-slate-500 max-h-32 custom-scroll"></textarea>
-                <button type="submit" id="submit-btn" class="bg-cyan-600 hover:bg-cyan-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition">
+                <textarea id="user-input" rows="1" placeholder="Tanyakan sesuatu atau tempel tautan/pesan mencurigakan..." 
+                          class="flex-1 bg-transparent border-0 px-2.5 py-2 text-sm focus:outline-none text-slate-100 placeholder-slate-500 max-h-32 custom-scroll"></textarea>
+                <button type="submit" id="submit-btn" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center transition shadow-sm">
                     <i class="fa-solid fa-paper-plane text-xs"></i>
                 </button>
             </form>
         </footer>
     </section>
 
-    <!-- Kolom Kanan: Live Forensic Telemetry & Anti-Fraud Toolbox -->
-    <aside class="w-96 bg-slate-900/80 p-5 flex flex-col justify-between hidden lg:flex custom-scroll overflow-y-auto">
+    <!-- Kolom Kanan: Panel Telemetri Forensik & Generator Laporan -->
+    <aside class="w-96 bg-[#091526] p-5 flex flex-col justify-between hidden lg:flex border-l border-[#162740] custom-scroll overflow-y-auto">
         <div class="space-y-5">
-            <!-- Header Panel -->
+            <!-- Header Panel Kanan -->
             <div>
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-1">
-                    <i class="fa-solid fa-radar text-cyan-400"></i> Live Telemetry & Inspector
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2 mb-1">
+                    <i class="fa-solid fa-satellite-dish text-blue-400"></i> Telemetri & Bukti Digital
                 </h2>
-                <p class="text-[11px] text-slate-500">Hasil pemindaian teknis tautan secara real-time</p>
+                <p class="text-[11px] text-slate-500">Pemeriksaan teknis domain secara langsung</p>
             </div>
 
-            <!-- Kartu Info Domain Nyata -->
-            <div id="intel-card" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
-                    <span class="text-xs font-semibold text-slate-300">Status Tautan</span>
-                    <span id="intel-badge" class="text-[10px] font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded">STANDBY</span>
+            <!-- Kartu Bukti Forensik Jaringan -->
+            <div id="intel-card" class="bg-[#0d1e36] border border-[#182e4e] rounded-2xl p-4 space-y-3 shadow-sm">
+                <div class="flex items-center justify-between pb-2 border-b border-[#182e4e]">
+                    <span class="text-xs font-medium text-slate-300">Hasil Pemindaian</span>
+                    <span id="intel-badge" class="text-[10px] font-mono bg-[#142640] text-slate-400 px-2 py-0.5 rounded border border-[#1e385e]">MENUNGGU DATA</span>
                 </div>
-                <div class="space-y-2 text-xs">
+                <div class="space-y-2.5 text-xs">
                     <div>
-                        <span class="text-[11px] text-slate-500 block">Domain yang Dipindai:</span>
-                        <span id="intel-domain" class="font-mono text-slate-200 font-semibold">-</span>
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Nama Domain:</span>
+                        <span id="intel-domain" class="font-mono text-slate-200 font-semibold break-all">-</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <span class="text-[11px] text-slate-500 block">Umur Domain (RDAP):</span>
+                            <span class="text-[11px] text-slate-400 block mb-0.5">Umur Domain:</span>
                             <span id="intel-age" class="font-mono text-slate-300">-</span>
                         </div>
                         <div>
-                            <span class="text-[11px] text-slate-500 block">Sertifikat SSL:</span>
+                            <span class="text-[11px] text-slate-400 block mb-0.5">Sertifikat SSL:</span>
                             <span id="intel-ssl" class="font-mono text-slate-300">-</span>
                         </div>
                     </div>
                     <div>
-                        <span class="text-[11px] text-slate-500 block">Judul Halaman Web:</span>
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Judul Halaman Web:</span>
                         <span id="intel-title" class="text-slate-300 line-clamp-1 italic text-[11px]">-</span>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Segel Integritas (SHA-256):</span>
+                        <span id="intel-hash" class="font-mono text-[10px] text-blue-400 bg-[#081220] px-2 py-0.5 rounded border border-[#162947] block truncate">-</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Kotak Penanganan Insiden & Template Dispute -->
-            <div class="bg-cyan-950/30 border border-cyan-800/50 rounded-2xl p-4 space-y-3">
-                <h3 class="text-xs font-bold text-cyan-300 flex items-center gap-2">
-                    <i class="fa-solid fa-file-shield text-cyan-400"></i> Generator Surat Dispute Bank
-                </h3>
-                <p class="text-[11px] text-slate-300 leading-relaxed">
-                    Jika Anda menjadi korban penipuan transfer uang, buat draft surat kronologi permohonan blokir rekening penipu secara instan.
+            <!-- Kartu Unduh Berkas Kronologi -->
+            <div class="bg-[#0b192c] border border-[#182d4d] rounded-2xl p-4 space-y-3">
+                <div class="flex items-center gap-2 text-slate-200">
+                    <i class="fa-solid fa-file-invoice text-blue-400 text-sm"></i>
+                    <h3 class="text-xs font-semibold">Arsip Kronologi Penipuan</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Jika Anda atau kerabat terlanjur melakukan transfer dana, unduh berkas kronologi tertulis ini untuk mempermudah permohonan pemblokiran rekening ke pihak bank.
                 </p>
-                <button onclick="generateDisputeLetter()" class="w-full text-center text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded-xl transition shadow-md shadow-cyan-950">
-                    <i class="fa-solid fa-download"></i> Buat Surat Lapor Bank (.txt)
+                <button onclick="downloadIncidentDraft()" class="w-full text-center text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-xl transition shadow-sm">
+                    <i class="fa-solid fa-download mr-1"></i> Unduh Draft Kronologi (.txt)
                 </button>
             </div>
 
-            <!-- Panduan Portal Resmi Pemerintah -->
-            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
-                <h4 class="text-xs font-semibold text-slate-300">Portal Pengaduan Resmi RI:</h4>
-                <ul class="text-[11px] space-y-1.5 text-slate-400">
-                    <li>• <strong>CekRekening.id:</strong> Periksa & laporkan rekening penipu (Komdigi).</li>
-                    <li>• <strong>Patrolisiber.id:</strong> Pelaporan kejahatan siber (Bareskrim Polri).</li>
-                    <li>• <strong>Lapor.go.id:</strong> Layanan aspirasi & pengaduan publik online.</li>
+            <!-- Petunjuk Kanal Verifikasi Resmi -->
+            <div class="bg-[#0c1a2e] border border-[#162740] rounded-2xl p-4 space-y-2">
+                <h4 class="text-xs font-medium text-slate-300">Pemberitahuan Pencegahan:</h4>
+                <ul class="text-[11px] space-y-1.5 text-slate-400 leading-relaxed">
+                    <li>• Pihak perbankan tidak pernah meminta PIN, kode OTP, atau foto fisik kartu ATM.</li>
+                    <li>• Centang hijau/biru resmi WhatsApp tidak dapat dipalsukan di dalam riwayat chat nama kontak.</li>
                 </ul>
             </div>
         </div>
 
-        <div class="text-[11px] font-mono text-slate-500 pt-4 border-t border-slate-800 flex justify-between">
-            <span>SecurAI v2.5</span>
-            <span class="text-emerald-400">● Engine Online</span>
+        <div class="text-[11px] font-mono text-slate-500 pt-3 border-t border-[#162740] flex justify-between items-center">
+            <span>Sistem Proteksi Konsumen</span>
+            <span class="text-emerald-400 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Siap
+            </span>
         </div>
     </aside>
 
