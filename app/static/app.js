@@ -7,6 +7,10 @@ const imageUpload = document.getElementById('image-upload');
 const imagePreviewContainer = document.getElementById('image-preview-container');
 const imagePreview = document.getElementById('image-preview');
 
+// Blok elemen status progress cepat
+const statusBar = document.getElementById('status-bar');
+const statusText = document.getElementById('status-text');
+
 // Blok elemen panel telemetri kanan
 const intelBadge = document.getElementById('intel-badge');
 const intelDomain = document.getElementById('intel-domain');
@@ -15,9 +19,32 @@ const intelSsl = document.getElementById('intel-ssl');
 const intelTitle = document.getElementById('intel-title');
 const intelHash = document.getElementById('intel-hash');
 
+// Blok elemen mobile tab
+const chatSection = document.getElementById('chat-section');
+const telemetryPanel = document.getElementById('telemetry-panel');
+const tabChatBtn = document.getElementById('tab-chat-btn');
+const tabIntelBtn = document.getElementById('tab-intel-btn');
+const mobileAlertDot = document.getElementById('mobile-alert-dot');
+
 let chatHistory = [];
 let attachedImageBase64 = null;
 let lastAnalyzedDomain = "";
+
+// Blok pengatur perpindahan tab di layar ponsel (< 1024px)
+function switchMobileTab(target) {
+    if (target === 'chat') {
+        chatSection.classList.remove('hidden');
+        telemetryPanel.classList.add('hidden');
+        tabChatBtn.className = "flex-1 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex items-center justify-center gap-1.5 shadow-sm";
+        tabIntelBtn.className = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5 relative";
+    } else {
+        chatSection.classList.add('hidden');
+        telemetryPanel.classList.remove('hidden');
+        tabIntelBtn.className = "flex-1 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition flex items-center justify-center gap-1.5 relative shadow-sm";
+        tabChatBtn.className = "flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center justify-center gap-1.5";
+        mobileAlertDot.classList.add('hidden');
+    }
+}
 
 // Blok penyesuaian tinggi otomatis kolom input
 userInput.addEventListener('input', function() {
@@ -25,7 +52,7 @@ userInput.addEventListener('input', function() {
     this.style.height = (this.scrollHeight) + 'px';
 });
 
-// Blok pengiriman pesan via tombol Enter (Shift + Enter untuk baris baru)
+// Blok pengiriman via tombol Enter
 userInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -33,7 +60,7 @@ userInput.addEventListener('keydown', function(e) {
     }
 });
 
-// Blok penanganan tempel gambar langsung dari clipboard (Ctrl + V)
+// Blok penanganan tempel screenshot (Ctrl + V)
 window.addEventListener('paste', (e) => {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     for (let item of items) {
@@ -67,7 +94,6 @@ function removeImage() {
     imagePreviewContainer.classList.add('hidden');
 }
 
-// Blok fungsi kasus cepat: hanya mengisi kolom input dan fokus (tanpa auto-send)
 function fillInput(text) {
     userInput.value = text;
     userInput.style.height = 'auto';
@@ -75,7 +101,6 @@ function fillInput(text) {
     userInput.focus();
 }
 
-// Blok pembaruan panel telemetri sisi kanan
 function updateTelemetryPanel(networkIntel, category, score) {
     if (!networkIntel) return;
     
@@ -96,9 +121,13 @@ function updateTelemetryPanel(networkIntel, category, score) {
         intelBadge.className = "text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded";
         intelBadge.textContent = "TERVERIFIKASI";
     }
+
+    // Tampilkan notifikasi titik merah di tab ponsel jika pengguna sedang berada di tab chat
+    if (chatSection && !chatSection.classList.contains('hidden')) {
+        mobileAlertDot.classList.remove('hidden');
+    }
 }
 
-// Blok render pesan percakapan ke tampilan
 function appendMessage(role, text, data = {}) {
     const isUser = role === 'user';
     const wrapper = document.createElement('div');
@@ -107,7 +136,7 @@ function appendMessage(role, text, data = {}) {
     if (isUser) {
         let imgTag = data.image ? `<img src="${data.image}" class="max-w-xs rounded-xl mb-2 border border-[#1b365c] shadow-sm">` : '';
         wrapper.innerHTML = `
-            <div class="bg-[#102442] border border-[#1c3c69] text-slate-100 p-3.5 rounded-2xl rounded-tr-none text-sm max-w-lg shadow-sm">
+            <div class="bg-[#102442] border border-[#1c3c69] text-slate-100 p-3.5 rounded-2xl rounded-tr-none text-xs lg:text-sm max-w-lg shadow-sm">
                 ${imgTag}
                 <div>${escapeHtml(text)}</div>
             </div>
@@ -148,7 +177,7 @@ function appendMessage(role, text, data = {}) {
             <div class="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex-shrink-0 flex items-center justify-center text-blue-400 text-xs">
                 <i class="fa-solid fa-robot"></i>
             </div>
-            <div class="bg-[#0e1e36] border border-[#182d4d] p-4 rounded-2xl rounded-tl-none text-sm text-slate-200 leading-relaxed shadow-sm w-full">
+            <div class="bg-[#0e1e36] border border-[#182d4d] p-3.5 lg:p-4 rounded-2xl rounded-tl-none text-xs lg:text-sm text-slate-200 leading-relaxed shadow-sm w-full">
                 ${alertBox}
                 ${mitreBadges}
                 <div class="whitespace-pre-wrap leading-relaxed">${formatMarkdown(text)}</div>
@@ -160,7 +189,7 @@ function appendMessage(role, text, data = {}) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Blok pengiriman formulir obrolan ke backend
+// Blok pengiriman form ke backend dengan status progress interaktif
 chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const message = userInput.value.trim();
@@ -175,6 +204,7 @@ chatForm.addEventListener('submit', async (e) => {
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-xs"></i>';
+    statusBar.classList.remove('hidden');
 
     try {
         const response = await fetch('/api/chat', {
@@ -205,10 +235,10 @@ chatForm.addEventListener('submit', async (e) => {
     } finally {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane text-xs"></i>';
+        statusBar.classList.add('hidden');
     }
 });
 
-// Blok generator unduhan berkas kronologi kejadian penipuan
 function downloadIncidentDraft() {
     const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
     const targetDomain = lastAnalyzedDomain !== "-" ? lastAnalyzedDomain : "[Tautan / Domain Pelaku]";
@@ -247,7 +277,6 @@ Pelapor mengajukan permohonan kepada pihak bank terkait untuk melakukan pembloki
     URL.revokeObjectURL(url);
 }
 
-// Blok fungsi reset sesi percakapan
 function clearSession() {
     chatHistory = [];
     chatContainer.innerHTML = '';
