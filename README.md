@@ -2,7 +2,8 @@
 
 <div align="center">
 
-![SecurAI Banner](https://capsule-render.vercel.app/api?type=waving&color=0B192C&height=220&section=header&text=SecurAI%20ConsumerGuard&fontSize=42&fontColor=38BDF8&animation=fadeIn&fontAlignY=38&desc=Hybrid%20Incident%20Triage,%20Live%20RDAP%20Inspection%20%26%20Consumer%20Protection%20Engine&descFontSize=16&descColor=94A3B8&descAlignY=58)
+![SecurAI Banner](<img width="740" height="740" alt="image" src="https://github.com/user-attachments/assets/1274468b-e545-46c0-9524-072b2e155420" />
+)
 
 [![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
