@@ -1,65 +1,132 @@
-# 🛡️ SecurAI — Intelligent SOC L1 Incident Triage & Threat Intelligence Assistant
+# 🛡️ SecurAI ConsumerGuard — Digital Anti-Fraud & Live Threat Telemetry Hub
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat&logo=python)](https://python.org)
-[![Google Gemini](https://img.shields.io/badge/AI%20Engine-Gemini%203.8%20Flash-8E75B2?style=flat)](https://ai.google.dev/)
-[![MITRE ATT%26CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-red?style=flat)](https://attack.mitre.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<div align="center">
 
-SecurAI adalah sistem asisten keamanan siber interaktif berbasis *Hybrid Engine* (Inspeksi Heuristik Lokal + Penalaran AI Multimodal). Dirancang khusus untuk membedah tautan phishing, skema APK trojan, situs judi online, serta mengedukasi pengguna dengan membedakan risiko **pelanggaran hak cipta (*piracy*)** versus **ancaman destruktif (*malicious intent*)**.
+![SecurAI Banner](https://capsule-render.vercel.app/api?type=waving&color=0B192C&height=220&section=header&text=SecurAI%20ConsumerGuard&fontSize=42&fontColor=38BDF8&animation=fadeIn&fontAlignY=38&desc=Hybrid%20Incident%20Triage,%20Live%20RDAP%20Inspection%20%26%20Consumer%20Protection%20Engine&descFontSize=16&descColor=94A3B8&descAlignY=58)
+
+[![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Google Gemini](https://img.shields.io/badge/AI%20Core-Gemini%203.1%20Flash--Lite-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/UI-Tailwind%20CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Tests Passed](https://img.shields.io/badge/Pytest-5%2F5%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
+
+<p align="center">
+  <b>Platform perlindungan konsumen digital cerdas berbasis <i>Dual-Engine</i> (Heuristik Asinkron Paralel + Multimodal AI Reasoning).</b><br>
+  Dirancang khusus untuk membedah rekayasa sosial perbankan, toko online palsu, file APK trojan, membedakan risiko <i>malvertising</i> pada situs komik non-resmi, serta mengamankan bukti digital bagi korban penipuan finansial online di Indonesia.
+</p>
+
+[Pengembang](#-pengembang--kontak) • [Fitur Utama](#-fitur-unggulan) • [Arsitektur & Alur](#-arsitektur--alur-data-sistem) • [PRD & Spesifikasi](#-product-requirement-document-prd) • [Instalasi](#-panduan-instalasi--menjalankan-sistem) • [Matriks MITRE](#-pemetaan-mitre-attck--klasifikasi) • [Struktur Proyek](#-struktur-direktori)
+
+</div>
 
 ---
 
-## 🏗️ System Architecture & Data Flow
+## 👨‍💻 Pengembang / Creator
 
-```text
-[ Pengguna Mengirim Teks / Tautan / Screenshot ]
-                        │
-                        ▼
-         [ 1. Ingestion & Security Guard ]
-         ├── Input Sanitization & Anti-XSS
-         └── Prompt Injection Blocker (Jailbreak Guard)
-                        │
-                        ▼
-         [ 2. Safe Heuristic & URL Inspector ]
-         ├── Anti-SSRF Validation (Blokir IP Private/Localhost)
-         ├── Redirect Chain Resolver (Unshorten bit.ly / s.id)
-         └── Pattern Scanner (Ekstensi .APK, Typosquatting Bank, Judol Keywords)
-                        │
-        ┌───────────────┴───────────────┐
-        ▼                               ▼
- [ URL Dapat Diakses ]         [ URL Terblokir / WAF ]
- Ambil <title> & Metadata       Minta Screenshot via Mode Samaran
-        │                               │
-        └───────────────┬───────────────┘
-                        │
-                        ▼
-         [ 3. Cognitive Engine (Gemini 3.8 Flash) ]
-         ├── Klasifikasi 3-Tier (Resmi vs Ilegal/Pirasi vs Aktif Berbahaya)
-         ├── Ekstraksi Indikator Malvertising & Phishing
-         └── Pemetaan Taktik MITRE ATT&CK (T1566.002, T1056.003, dll.)
-                        │
-                        ▼
-         [ 4. SOC Cockpit Dashboard UI ]
-         ├── URL Defanging Otomatis (hxxps[://]contoh[.]com)
-         ├── Dynamic Risk Meter & Heuristic Badges
-         └── Ekspor Tiket Laporan Insiden (.MD / .JSON)
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/ChoqySirait">
+          <img src="https://avatars.githubusercontent.com/ChoqySirait" width="110px;" alt="Choqy Pananda Sirait" style="border-radius: 50%; border: 3px solid #0284C7;"/><br />
+          <sub><b>Choqy Pananda Sirait</b></sub>
+        </a><br />
+        <sub>Lead Developer & System Architect</sub><br /><br />
+        <a href="https://github.com/ChoqySirait">
+          <img src="https://img.shields.io/badge/GitHub-ChoqySirait-181717?style=flat-square&logo=github" alt="GitHub ChoqySirait" />
+        </a>
+      </td>
+    </tr>
+  </table>
+  <p><i>Proyek ini dirancang dan dikembangkan sebagai solusi operasional perlindungan konsumen digital, mitigasi insiden siber, dan rekayasa perangkat lunak berstandar industri.</i></p>
+</div>
 
+---
+
+## 📱 Antarmuka Aplikasi (Desktop & Mobile)
+
+<div align="center">
+  <table>
+    <tr>
+      <td width="65%" align="center">
+        <b>🖥️️ Tampilan Desktop (Split-Pane Live Telemetry)</b><br><br>
+        <img src="assets/desktop-preview.png" alt="Desktop Preview" width="100%" style="border-radius: 12px; border: 1px solid #1E293B;">
+      </td>
+      <td width="35%" align="center">
+        <b>📱 Tampilan Mobile (Tab Switcher)</b><br><br>
+        <img src="assets/mobile-preview.png" alt="Mobile Preview" width="100%" style="border-radius: 12px; border: 1px solid #1E293B;">
+      </td>
+    </tr>
+  </table>
+  <sub><i>Letakkan tangkapan layar antarmuka di direktori <code>assets/desktop-preview.png</code> dan <code>assets/mobile-preview.png</code>.</i></sub>
+</div>
+
+---
+
+## ⚡ Mengapa SecurAI ConsumerGuard Berbeda?
+
+Sebagian besar chatbot keamanan hanya bertindak sebagai *wrapper prompt* biasa yang menebak bahaya semata-mata dari nama domain. **SecurAI mengintegrasikan protokol forensik jaringan nyata tanpa asumsi kosong:**
+
+```mermaid
+mindmap
+  root((SecurAI Engine))
+    Inspeksi Jaringan Nyata
+      Socket SSL Handshake ::icon(fa fa-lock)
+      Protokol RDAP ICANN ::icon(fa fa-globe)
+      Live HTTP Content Scraping
+    Pertahanan Berlapis
+      Anti-SSRF RFC 1918 Guard
+      URL Defanging Otomatis hxxps
+      Prompt Injection Blocker
+    Penalaran Kognitif AI
+      Multi-Model Fallback 3.1 ke 3.8
+      Objektivitas Pirasi vs Malicious
+      OCR Multimodal Screenshot WAF
+    Tindakan Korban Nyata
+      Integritas Bukti SHA-256
+      Generator Surat Dispute Bank
+      Rujukan Portal Komdigi & Polri
 ```
+--- 
 
----
+🔬 Arsitektur & Alur Data Sistem
+SecurAI memanfaatkan arsitektur Asynchronous Parallel Telemetry (asyncio.gather). Ketika pengguna mengirimkan tautan, sistem tidak mengeksekusi inspeksi secara sekuensial yang lambat, melainkan melakukan handshake SSL, kueri database registrasi domain RDAP, dan scraping konten secara simultan.
 
-✨ Fitur Unggulan :
+sequenceDiagram
+    autonumber
+    actor User as Pengguna / Korban
+    participant UI as Dual-Pane Cockpit (Web/Mobile)
+    participant GW as FastAPI Gateway (Anti-SSRF & Sanitizer)
+    participant Core as Parallel Telemetry Engine (asyncio)
+    participant AI as Google Gemini 3.1 Flash-Lite (w/ Fallback)
 
-🔬 Safe Web Inspection: Menginspeksi tautan tanpa risiko SSRF (Server-Side Request Forgery).
+    User->>UI: Input Tautan / Pesan Rekayasa Sosial / Screenshot
+    UI->>GW: HTTP POST /api/chat (JSON Payload + History)
+    
+    rect rgb(11, 25, 44)
+        Note over GW: Validasi Anti-SSRF (Tolak Localhost & IP RFC 1918)<br/>Penyaringan Injeksi Prompt
+        GW->>Core: Jalankan Eksekusi Forensik Paralel
+        par Inspeksi Sertifikat SSL
+            Core->>Core: Direct Socket Handshake Port 443 (Issuer & Expiry)
+        and Kueri Registrasi RDAP
+            Core->>Core: Fetch ICANN RDAP (Hitung Usia Domain Nyata)
+        and HTTP Headless Inspection
+            Core->>Core: Ekstraksi Title, Meta, & Kata Kunci Ancaman
+        end
+        Core->>Core: Kalkulasi Skor Heuristik & Cetak SHA-256 Evidence Seal
+    end
 
-🖼️ Multimodal OCR & Vision: Unggah tangkapan layar jika situs memblokir bot otomatis (Cloudflare/DDoS-Guard).
+    Core->>AI: Kirim Konteks Chat + Telemetri Teknis Jaringan
+    
+    alt Model Utama Tersedia
+        AI-->>GW: Respons Rekomendasi Solutif + Tag MITRE
+    else Server Utama Mengalami Lonjakan Trafik (503/429)
+        AI->>AI: Otomatis Alihkan ke Model Cadangan (Multi-Model Fallback)
+        AI-->>GW: Respons Terjaga Tanpa Crash
+    end
 
-🎯 Diferensiasi Ancaman Objektif: Mampu membedakan situs komik/streaming bajakan (resiko iklan pihak ketiga) dengan situs penipuan murni (credential harvest).
-
-🛡️ URL Defanging Standar SOC: Menetralkan tautan aktif menjadi hxxp[://] demi keamanan analis.
-
-📋 Export Incident Report: Unduh ringkasan audit insiden dalam satu klik untuk dokumentasi kepatuhan.
-
-
-
+    GW-->>UI: JSON Payload (Balasan Luwes + Data Telemetri Panel Kanan)
+    UI-->>User: Tampilkan Indikator Risiko, Kartu Forensik, & Surat Dispute
