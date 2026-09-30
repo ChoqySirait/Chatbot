@@ -2,11 +2,12 @@ import socket
 import ssl
 import hashlib
 import datetime
+import asyncio
 from urllib.parse import urlparse
 import httpx
 from typing import Dict, Any
 
-# Blok kode ini mengekstrak nama host/domain murni dari tautan URL
+# Blok kode ini mengekstrak nama domain murni dari tautan URL
 def get_domain_from_url(url: str) -> str:
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
@@ -14,15 +15,15 @@ def get_domain_from_url(url: str) -> str:
     domain = parsed.hostname or url.split('/')[0]
     return domain.lower().strip()
 
-# Blok kode ini membuat hash SHA-256 sebagai segel integritas bukti digital
+# Blok kode ini membuat segel integritas SHA-256 untuk bukti digital
 def generate_evidence_hash(data: str) -> str:
     return hashlib.sha256(data.encode('utf-8')).hexdigest()[:16]
 
-# Blok kode ini memeriksa keaslian dan masa aktif sertifikat SSL domain
-def inspect_ssl_certificate(domain: str) -> Dict[str, Any]:
+# Blok kode sinkron socket SSL yang dibungkus threadpool agar non-blocking
+def _check_ssl_sync(domain: str) -> Dict[str, Any]:
     try:
         context = ssl.create_default_context()
-        with socket.create_connection((domain, 443), timeout=3.0) as sock:
+        with socket.create_connection((domain, 443), timeout=1.8) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
                 issuer = dict(x[0] for x in cert.get('issuer', []))
@@ -46,8 +47,12 @@ def inspect_ssl_certificate(domain: str) -> Dict[str, Any]:
             "is_free_cert": False
         }
 
-# Blok kode ini memeriksa tanggal registrasi dan umur domain via protokol RDAP resmi
-def inspect_domain_registration(domain: str) -> Dict[str, Any]:
+# Blok kode asinkron inspeksi SSL
+async def inspect_ssl_certificate(domain: str) -> Dict[str, Any]:
+    return await asyncio.to_thread(_check_ssl_sync, domain)
+
+# Blok kode asinkron inspeksi pendaftaran domain via RDAP ICANN
+async def inspect_domain_registration(domain: str) -> Dict[str, Any]:
     if any(char.isdigit() for char in domain.split('.')):
         parts = domain.split('.')
         if len(parts) == 4 and all(p.isdigit() for p in parts):
@@ -55,8 +60,8 @@ def inspect_domain_registration(domain: str) -> Dict[str, Any]:
 
     rdap_url = f"https://rdap.org/domain/{domain}"
     try:
-        with httpx.Client(timeout=3.5, follow_redirects=True) as client:
-            resp = client.get(rdap_url)
+        async with httpx.AsyncClient(timeout=1.8, follow_redirects=True) as client:
+            resp = await client.get(rdap_url)
             if resp.status_code == 200:
                 data = resp.json()
                 events = data.get("events", [])
@@ -69,10 +74,11 @@ def inspect_domain_registration(domain: str) -> Dict[str, Any]:
                 
                 if reg_date:
                     age_days = (datetime.datetime.utcnow() - reg_date).days
+                    registrar_name = data.get("entities", [{}])[0].get("vcardArray", [None, [[]]])[1][1][3] if data.get("entities") else "Penyedia Domain"
                     return {
                         "age_days": age_days,
                         "creation_date": reg_date.strftime("%d %b %Y"),
-                        "registrar": data.get("entities", [{}])[0].get("vcardArray", [None, [[]]])[1][1][3] if data.get("entities") else "Penyedia Domain"
+                        "registrar": registrar_name
                     }
     except Exception:
         pass
