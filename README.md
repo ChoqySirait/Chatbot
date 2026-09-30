@@ -1,3 +1,4 @@
+<img width="959" height="536" alt="Screenshot 2026-09-30 212519" src="https://github.com/user-attachments/assets/068bd15f-829f-45b0-b230-252888f07dc2" />
 # 🛡️ SecurAI ConsumerGuard — Digital Anti-Fraud & Live Threat Telemetry Hub
 
 <div align="center">
@@ -53,11 +54,12 @@
     <tr>
       <td width="65%" align="center">
         <b>🖥️️ Tampilan Desktop (Split-Pane Live Telemetry)</b><br><br>
-        <img src="assets/desktop-preview.png" alt="Desktop Preview" width="100%" style="border-radius: 12px; border: 1px solid #1E293B;">
+       <img width="959" height="533" alt="Screenshot 2026-09-30 212525" src="https://github.com/user-attachments/assets/0ab15f5a-343d-4fdd-ac03-4d335c485308" />
+      <img width="959" height="530" alt="Screenshot 2026-09-30 212609" src="https://github.com/user-attachments/assets/37a6dc26-58ee-449c-bc6a-37a46af2bc54" />
       </td>
       <td width="35%" align="center">
         <b>📱 Tampilan Mobile (Tab Switcher)</b><br><br>
-        <img src="assets/mobile-preview.png" alt="Mobile Preview" width="100%" style="border-radius: 12px; border: 1px solid #1E293B;">
+        <img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/ecd48e15-762b-464f-bcf2-5e36530d8320" />
       </td>
     </tr>
   </table>
@@ -89,8 +91,9 @@ mindmap
       Integritas Bukti SHA-256
       Generator Surat Dispute Bank
       Rujukan Portal Komdigi & Polri
-```
---- 
+
+```<img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/0ba0a6b3-ae8e-42b5-ba4a-6710b66244fd" />
+
 
 🔬 Arsitektur & Alur Data Sistem
 SecurAI memanfaatkan arsitektur Asynchronous Parallel Telemetry (asyncio.gather). Ketika pengguna mengirimkan tautan, sistem tidak mengeksekusi inspeksi secara sekuensial yang lambat, melainkan melakukan handshake SSL, kueri database registrasi domain RDAP, dan scraping konten secara simultan.
