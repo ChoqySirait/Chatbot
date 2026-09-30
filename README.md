@@ -1,4 +1,3 @@
-<img width="959" height="536" alt="Screenshot 2026-09-30 212519" src="https://github.com/user-attachments/assets/068bd15f-829f-45b0-b230-252888f07dc2" />
 # 🛡️ SecurAI ConsumerGuard — Digital Anti-Fraud & Live Threat Telemetry Hub
 
 <div align="center">
