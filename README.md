@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![SecurAI Banner] <img width="740" height="740" alt="image" src="https://github.com/user-attachments/assets/1274468b-e545-46c0-9524-072b2e155420" />
 
 [![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
