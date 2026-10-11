@@ -74,27 +74,27 @@ Sebagian besar chatbot keamanan hanya bertindak sebagai *wrapper prompt* biasa y
 mindmap
   root((SecurAI Engine))
     Inspeksi Jaringan Nyata
-      Socket SSL Handshake ::icon(fa fa-lock)
-      Protokol RDAP ICANN ::icon(fa fa-globe)
+      Socket SSL Handshake
+      Protokol RDAP ICANN
       Live HTTP Content Scraping
     Pertahanan Berlapis
       Anti-SSRF RFC 1918 Guard
-      URL Defanging Otomatis hxxps
+      URL Defanging Otomatis
       Prompt Injection Blocker
     Penalaran Kognitif AI
-      Multi-Model Fallback 3.1 ke 3.8
+      Multi-Model Fallback
       Objektivitas Pirasi vs Malicious
       OCR Multimodal Screenshot WAF
     Tindakan Korban Nyata
       Integritas Bukti SHA-256
       Generator Surat Dispute Bank
-      Rujukan Portal Komdigi & Polri
-
+      Rujukan Portal Komdigi dan Polri 
 ```
 
-🔬 Arsitektur & Alur Data Sistem
+## 🔬 Arsitektur & Alur Data Sistem
 SecurAI memanfaatkan arsitektur Asynchronous Parallel Telemetry (asyncio.gather). Ketika pengguna mengirimkan tautan, sistem tidak mengeksekusi inspeksi secara sekuensial yang lambat, melainkan melakukan handshake SSL, kueri database registrasi domain RDAP, dan scraping konten secara simultan.
 
+```mermaid
 sequenceDiagram
     autonumber
     actor User as Pengguna / Korban
@@ -130,4 +130,44 @@ sequenceDiagram
 
     GW-->>UI: JSON Payload (Balasan Luwes + Data Telemetri Panel Kanan)
     UI-->>User: Tampilkan Indikator Risiko, Kartu Forensik, & Surat Dispute 
-    
+```
+---
+
+## 📋 Product Requirement Document (PRD)
+### 1. Latar Belakang & Pernyataan Masalah
+   - Tingginya angka kerugian masyarakat akibat penipuan transaksi digital, tautan phishing APK kurir/undangan, dan toko online palsu di Indonesia.
+   - Sebagian besar korban mengalami kepanikan pada 15 menit pertama (Golden Hour) dan tidak tahu format data apa yang harus diserahkan kepada pihak perbankan guna menahan saldo penipu.
+   - Banyak sistem filter otomatis memukul rata seluruh web ilegal komik/streaming sebagai pencuri data, sehingga rekomendasi mitigasi yang diberikan kepada pengguna awam menjadi bias dan tidak edukatif.
+
+### 2. Sasaran Pengguna
+   - Masyarakat Konsumen Digital: Membutuhkan validasi cepat sebelum mentransfer uang ke penjual online atau mengklik tautan promo.
+   - Korban Penipuan Siber: Membutuhkan panduan darurat taktis dan draf kronologi resmi untuk pemblokiran rekening tujuan.
+   - Analis Keamanan Junior (L1 SOC) / Mahasiswa: Menggunakan konsol untuk membedah tautan mencurigakan dengan parameter defanging dan ekstraksi metadata.
+
+---
+
+### 3. Matriks Kebutuhan Fungsional (Functional Requirements)
+
+| Kode | Modul | Kebutuhan Sistem | Kriteria Keberhasilan |
+| :--- | :--- | :--- | :--- |
+| **FR-01** | *Safe URL Engine* | Validasi anti-SSRF terhadap seluruh masukan URL. | Menolak resolusi alamat `127.0.0.1`, `localhost`, dan subnet privat RFC 1918. |
+| **FR-02** | *Parallel Inspector* | Memeriksa SSL, RDAP, dan konten web secara asinkron. | Total latensi inspeksi teknis jaringan ≤ 1.8 detik per request. |
+| **FR-03** | *Multimodal Fallback* | Menerima lampiran gambar jika web target dilindungi WAF. | AI Vision membaca elemen formulir sensitif atau logo tiruan dari screenshot. |
+| **FR-04** | *Adaptive Tone* | Merespons percakapan nonformal (*"min"*, *"bro"*, *"ini nipu ga?"*). | Menghasilkan jawaban yang empatik, solutif, dan tanpa salam pembuka klise. |
+| **FR-05** | *Evidence Hashing* | Menghasilkan segel integritas digital instan. | Dihasilkan hash SHA-256 16-karakter unik untuk setiap sesi pemeriksaan. |
+| **FR-06** | *Dispute Automation* | Generator surat permohonan blokir rekening bank penipu. | Menghasilkan berkas teks terstruktur siap bawa dalam 1 kali klik. |
+
+### 4. Batasan Teknis & Keamanan (Non-Functional Requirements)
+  - Kerahasiaan Data: Aplikasi bersifat stateless; riwayat percakapan hanya disimpan di memori klien (browser) dan tidak disimpan permanen di database server demi privasi pengguna.
+  - Resiliensi API: Memiliki daftar Multi-Model Fallback (gemini-3.1-flash-lite $\rightarrow$ gemini-3.5-flash $\rightarrow$ gemini-3.8-flash) untuk menangani lonjakan antrean server pihak ketiga.
+
+## 🛠️ Tech Stack & Dependensi
+  - Backend Framework: FastAPI (Asynchronous Python Web Framework)
+  - Server Gateway: Uvicorn (Lightning-fast ASGI Server)
+  - AI Cognitive Core: Google GenAI SDK (gemini-3.1-flash-lite & fallback cluster)
+  - Network & HTTP Layer: HTTPX (Async HTTP client) & Python Native ssl/socket
+  - Data Validation: Pydantic v2
+  - Frontend UI: Vanilla JS (ES6+), HTML5, Tailwind CSS CDN, FontAwesome 6
+  - Automated Testing: Pytest & asyncio test runner
+
+```Soon```
