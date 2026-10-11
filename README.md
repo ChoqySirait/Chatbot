@@ -90,7 +90,8 @@ mindmap
       Generator Surat Dispute Bank
       Rujukan Portal Komdigi & Polri
 
-```<img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/0ba0a6b3-ae8e-42b5-ba4a-6710b66244fd" />
+```
+<img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/0ba0a6b3-ae8e-42b5-ba4a-6710b66244fd" />
 
 
 🔬 Arsitektur & Alur Data Sistem
@@ -130,4 +131,5 @@ sequenceDiagram
     end
 
     GW-->>UI: JSON Payload (Balasan Luwes + Data Telemetri Panel Kanan)
-    UI-->>User: Tampilkan Indikator Risiko, Kartu Forensik, & Surat Dispute
+    UI-->>User: Tampilkan Indikator Risiko, Kartu Forensik, & Surat Dispute 
+    
