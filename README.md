@@ -57,7 +57,7 @@
       </td>
       <td width="35%" align="center">
         <b>📱 Tampilan Mobile (Tab Switcher)</b><br><br>
-        <img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/ecd48e15-762b-464f-bcf2-5e36530d8320" />
+        <img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/0ba0a6b3-ae8e-42b5-ba4a-6710b66244fd" />
       </td>
     </tr>
   </table>
@@ -91,8 +91,6 @@ mindmap
       Rujukan Portal Komdigi & Polri
 
 ```
-<img width="216" height="466" alt="Screenshot 2026-09-30 212707" src="https://github.com/user-attachments/assets/0ba0a6b3-ae8e-42b5-ba4a-6710b66244fd" />
-
 
 🔬 Arsitektur & Alur Data Sistem
 SecurAI memanfaatkan arsitektur Asynchronous Parallel Telemetry (asyncio.gather). Ketika pengguna mengirimkan tautan, sistem tidak mengeksekusi inspeksi secara sekuensial yang lambat, melainkan melakukan handshake SSL, kueri database registrasi domain RDAP, dan scraping konten secara simultan.
