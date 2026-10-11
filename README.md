@@ -61,7 +61,7 @@
       </td>
     </tr>
   </table>
-  <sub><i>Letakkan tangkapan layar antarmuka di direktori <code>assets/desktop-preview.png</code> dan <code>assets/mobile-preview.png</code>.</i></sub>
+  <sub><i>Tampilan Desktop dan Mobile</i></sub>
 </div>
 
 ---
