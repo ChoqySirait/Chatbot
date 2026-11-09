@@ -170,4 +170,5 @@ sequenceDiagram
   - Frontend UI: Vanilla JS (ES6+), HTML5, Tailwind CSS CDN, FontAwesome 6
   - Automated Testing: Pytest & asyncio test runner
 
-```Will Update Soon (Make Schedule) ```
+```Will Update Soon (Make Schedule)```
+``` Thinkinggggggggg ```
