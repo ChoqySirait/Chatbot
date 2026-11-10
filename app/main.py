@@ -57,5 +57,6 @@ async def handle_chat(req: ChatRequest):
         reply=reply,
         heuristics=heuristic_result,
         mitre_tags=mitre_tags,
-        threat_category=category
+        threat_category=category,
+        canonical_result=heuristics_dict.get("canonical_result")
     )
