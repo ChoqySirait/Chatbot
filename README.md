@@ -5,7 +5,7 @@
 [![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests Passed](https://img.shields.io/badge/Pytest-48%2F48%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests Passed](https://img.shields.io/badge/Pytest-64%2F64%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
@@ -44,7 +44,12 @@
 
 ## 📊 Status Implementasi Fitur
 
-### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1, 2, 3, & 4)
+### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1, 2, 3, 4, & 5)
+- **Defensive HTTP Security Headers & CORS (Milestone 5 - SEC-09):** Penerapan otomatis `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, dan Content-Security-Policy (CSP) ketat pada seluruh respons.
+- **In-Memory Rate Limiting & 5 MB Payload Protection (Milestone 5 - SEC-08):** Pembatasan laju permintaan (*sliding-window rate limiter* 120 req/menit per IP) dengan kode status HTTP 429 dan header `Retry-After`, serta penolakan otomatis muatan melebihi 5 MB (HTTP 413).
+- **Threat Intelligence & Reputation Adapter (Milestone 5 - ANA-09):** Modul `ThreatReputationAdapter` dengan *curated offline threat feed*, batasan privasi data tanpa membocorkan parameter URL/PII, dan fallback *graceful degradation* deterministik.
+- **Automated CI/CD Pipeline (Milestone 5 - REL-01):** Alur kerja GitHub Actions (`.github/workflows/ci.yml`) menjalankan linting, 64 unit/security/integration tests secara offline, dan verifikasi production build React TypeScript.
+- **Curated Benchmark Evaluation Dataset (Milestone 5 - AI-08, REL-02):** Evaluasi akurasi menyeluruh pada 7 skenario benchmark kurasi (domain resmi perbankan, phishing urgent, trojan APK undangan, malvertising, dan pesan umum).
 - **Forensic Incident Dossier Exporter (Milestone 4 - REP-01, REP-02, REP-03):** Generator laporan dosir insiden forensik komprehensif dalam format Markdown (.md) dan JSON kanonikal dengan tabel kronologi, daftar segel SHA-256 artefak, dan print preview siap PDF untuk laporan bank dan kepolisian.
 - **Interactive MITRE ATT&CK Enterprise Matrix (Milestone 4 - ANA-07, UX-02):** Visualisasi interaktif pemetaan taktik siber (Reconnaissance, Resource Development, Initial Access, Execution, Credential Access, C2) dengan mapping aturan deteksi heuristik SecurAI dan mitigasi resmi.
 - **Bilingual Learning Center & Phishing Simulator Quiz (Milestone 4 - EDU-01, EDU-02, EDU-03):** Pusat edukasi modus kejahatan siber Indonesia (APK undangan, phishing bank, task scam, tilang ETLE) dilengkapi simulator kuis deteksi phishing interaktif dengan penilaian skor kewaspadaan.
@@ -66,10 +71,10 @@
 - **Graceful Degradation Fallback (AI-05):** Analisis deterministik lokal tetap aktif penuh bila server AI eksternal offline, kuota habis, atau API key belum dikonfigurasi.
 - **Modular API v1 Endpoints (Section 5.4):** Endpoint terpisah `/api/v1/analyze/url`, `/api/v1/analyze/message`, `/api/v1/health`, dan `/api/v1/ready`.
 - **Privacy-Preserving Logging (SEC-07):** Logging terpusat dengan filter redaksi otomatis terhadap token, API key, dan kredensial sensitif.
-- **Reproducible Test Environment (ENG-01):** 48 unit, security, and integration tests terisolasi dengan 100% *deterministic mocks*, berjalan offline dalam ~2 detik.
+- **Reproducible Test Environment (ENG-01):** 64 unit, security, and integration tests terisolasi dengan 100% *deterministic mocks*, berjalan offline dalam ~2 detik.
 
-### ⏳ Fitur dalam Roadmap Berikutnya (Milestone 5)
-- **Milestone 5:** Integrasi threat reputation feeds (evaluasi privasi & rate limits), audit logging lanjutan, dan Public Release Candidate readiness.
+### 🎯 Status Release Candidate (RC)
+- Seluruh prioritas inti **P0** dan **P1** dari Product Decisions & Backlog v1 telah selesai diimplementasikan dan diverifikasi 100%. SecurAI siap untuk deployment dan pengujian publik terkontrol.
 
 ---
 
@@ -190,7 +195,7 @@ Seluruh pengujian dirancang 100% offline dengan mocking deterministik:
 ```bash
 pytest -v
 ```
-*Hasil aktual:* 48 test cases lulus 100% dalam < 2 detik.
+*Hasil aktual:* 64 test cases lulus 100% dalam ~2 detik.
 
 ### 6. Menjalankan Frontend & Membangun Production Bundle
 Aplikasi frontend menggunakan React 19, TypeScript, dan Vite pada folder `frontend/`:
@@ -215,12 +220,13 @@ Buka browser pada alamat: `http://127.0.0.1:8000` (FastAPI secara otomatis menya
 ```mermaid
 flowchart LR
     M1["Milestone 1 (SELESAI)\n- Hardened SSRF & DNS\n- Brand PSL Engine\n- Hardened Scraper\n- SHA-256 Manifest"]
-    M2["Milestone 2 (SELESAI)\n- Gemini Structured JSON\n- Multi-URL Analysis\n- Message Intelligence\n- API v1 Endpoints\n- 47 Mocked Tests"]
+    M2["Milestone 2 (SELESAI)\n- Gemini Structured JSON\n- Multi-URL Analysis\n- Message Intelligence\n- API v1 Endpoints"]
     M3["Milestone 3 (SELESAI)\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)"]
-    M4["Milestone 4 (SELESAI)\n- Forensic Dossier (.MD/JSON)\n- MITRE ATT&CK Matrix\n- Learning & Quiz Simulator\n- 48 Mocked Tests"]
-    M5["Milestone 5 (Target)\n- Threat Feed Integration\n- Rate Limiting\n- Release Candidate"]
+    M4["Milestone 4 (SELESAI)\n- Forensic Dossier (.MD/JSON)\n- MITRE ATT&CK Matrix\n- Learning & Quiz Simulator"]
+    M5["Milestone 5 (SELESAI)\n- Security Headers & CORS\n- In-Memory Rate Limiting\n- Threat Feed Adapter\n- GitHub Actions CI\n- 64 Mocked Tests"]
+    RC["Release Candidate v2.5.0\n(Production Ready)"]
 
-    M1 --> M2 --> M3 --> M4 --> M5
+    M1 --> M2 --> M3 --> M4 --> M5 --> RC
 ```
 
 ---

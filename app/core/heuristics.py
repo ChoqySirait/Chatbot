@@ -279,7 +279,8 @@ async def analyze_heuristics(text: str) -> Dict[str, Any]:
     has_suspicious = len(flags) > 0 or score > 0
 
     # 3. Klasifikasi Kanonis Berdasarkan Skor & Temuan
-    if score >= 60:
+    has_critical_findings = any(f.severity == "critical" for f in findings)
+    if score >= 60 or has_critical_findings:
         classification = "high_risk"
     elif score >= 20:
         classification = "needs_caution"
