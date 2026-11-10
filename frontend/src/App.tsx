@@ -8,6 +8,7 @@ import { ThreatIntelExplorer } from './components/threat-intel/ThreatIntelExplor
 import { IncidentManager } from './components/incidents/IncidentManager';
 import { EvidenceVault } from './components/evidence/EvidenceVault';
 import { ReportGenerator } from './components/reports/ReportGenerator';
+import { LearningCenter } from './components/learning/LearningCenter';
 import { SettingsManager } from './components/settings/SettingsManager';
 import { db } from './db';
 import { Terminal, User, Lock } from 'lucide-react';
@@ -90,13 +91,8 @@ const AppContent: React.FC = () => {
         {activeTab === 'incidents' && <IncidentManager />}
         {activeTab === 'evidence' && <EvidenceVault />}
         {activeTab === 'reports' && <ReportGenerator />}
+        {activeTab === 'learn' && <LearningCenter />}
         {activeTab === 'settings' && <SettingsManager />}
-        {activeTab === 'learn' && (
-          <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
-            <p className="text-sm font-medium text-slate-400">Pusat Edukasi & Simulasi Phishing</p>
-            <p className="text-xs text-slate-600 mt-1">Siap diintegrasikan pada commit berikutnya.</p>
-          </div>
-        )}
       </main>
 
       <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">

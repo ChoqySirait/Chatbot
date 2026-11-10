@@ -44,7 +44,10 @@
 
 ## 📊 Status Implementasi Fitur
 
-### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1, 2, & 3)
+### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1, 2, 3, & 4)
+- **Forensic Incident Dossier Exporter (Milestone 4 - REP-01, REP-02, REP-03):** Generator laporan dosir insiden forensik komprehensif dalam format Markdown (.md) dan JSON kanonikal dengan tabel kronologi, daftar segel SHA-256 artefak, dan print preview siap PDF untuk laporan bank dan kepolisian.
+- **Interactive MITRE ATT&CK Enterprise Matrix (Milestone 4 - ANA-07, UX-02):** Visualisasi interaktif pemetaan taktik siber (Reconnaissance, Resource Development, Initial Access, Execution, Credential Access, C2) dengan mapping aturan deteksi heuristik SecurAI dan mitigasi resmi.
+- **Bilingual Learning Center & Phishing Simulator Quiz (Milestone 4 - EDU-01, EDU-02, EDU-03):** Pusat edukasi modus kejahatan siber Indonesia (APK undangan, phishing bank, task scam, tilang ETLE) dilengkapi simulator kuis deteksi phishing interaktif dengan penilaian skor kewaspadaan.
 - **Modern React + Vite + TypeScript Frontend (Milestone 3):** Antarmuka modern, interaktif, dan modular menggunakan React 19, TypeScript, Tailwind CSS v4, dan Lucide Icons di `frontend/`.
 - **Local-First Storage Engine (Dexie.js / IndexedDB) (Milestone 3):** Seluruh buku kasus insiden (*Incident Casebook*), kronologi investigasi (*Timeline*), dan brankas bukti (*Evidence Vault*) disimpan secara mandiri di browser pengguna tanpa retensi data sensitif di server (*zero server-side retention*).
 - **Dual-Mode Presentation (Consumer vs Analyst SOC Mode) (Milestone 3):** Memetakan objek kanonis yang sama ke dalam mode panduan ramah konsumen (ramah, bebas jargon, tindakan darurat) atau konsol SOC teknis (telemetri jaringan, rute redirect, MITRE ATT&CK, raw JSON kanonikal).
@@ -65,8 +68,8 @@
 - **Privacy-Preserving Logging (SEC-07):** Logging terpusat dengan filter redaksi otomatis terhadap token, API key, dan kredensial sensitif.
 - **Reproducible Test Environment (ENG-01):** 48 unit, security, and integration tests terisolasi dengan 100% *deterministic mocks*, berjalan offline dalam ~2 detik.
 
-### ⏳ Fitur dalam Roadmap Berikutnya (Milestone 4)
-- **Milestone 4:** Peningkatan Visualisasi Matriks MITRE ATT&CK interaktif, integrasi eksternal threat feed (MISP/OpenCTI stubs), audit trail export, dan automated benchmark testing.
+### ⏳ Fitur dalam Roadmap Berikutnya (Milestone 5)
+- **Milestone 5:** Integrasi threat reputation feeds (evaluasi privasi & rate limits), audit logging lanjutan, dan Public Release Candidate readiness.
 
 ---
 
@@ -213,10 +216,11 @@ Buka browser pada alamat: `http://127.0.0.1:8000` (FastAPI secara otomatis menya
 flowchart LR
     M1["Milestone 1 (SELESAI)\n- Hardened SSRF & DNS\n- Brand PSL Engine\n- Hardened Scraper\n- SHA-256 Manifest"]
     M2["Milestone 2 (SELESAI)\n- Gemini Structured JSON\n- Multi-URL Analysis\n- Message Intelligence\n- API v1 Endpoints\n- 47 Mocked Tests"]
-    M3["Milestone 3 (SELESAI)\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)\n- 48 Mocked Tests"]
-    M4["Milestone 4 (Target)\n- Analyst Mode (SOC L1)\n- MITRE ATT&CK Matrix\n- Raw Forensic Exporter\n- E2E Validation"]
+    M3["Milestone 3 (SELESAI)\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)"]
+    M4["Milestone 4 (SELESAI)\n- Forensic Dossier (.MD/JSON)\n- MITRE ATT&CK Matrix\n- Learning & Quiz Simulator\n- 48 Mocked Tests"]
+    M5["Milestone 5 (Target)\n- Threat Feed Integration\n- Rate Limiting\n- Release Candidate"]
 
-    M1 --> M2 --> M3 --> M4
+    M1 --> M2 --> M3 --> M4 --> M5
 ```
 
 ---
