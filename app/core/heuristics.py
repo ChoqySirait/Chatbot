@@ -18,6 +18,7 @@ from app.core.public_suffix import get_domain_from_url, detect_brand_impersonati
 from app.core.network_intel import inspect_ssl_certificate, inspect_domain_registration, generate_evidence_hash, create_evidence_manifest
 from app.core.message_intel import analyze_message_text
 from app.schemas import AnalysisFinding, CanonicalAnalysisResult
+from app.integrations.reputation import default_reputation_adapter
 
 URL_REGEX = r'(https?://[^\s<>"]+|www\.[^\s<>"]+|[a-zA-Z0-9-]+\.(?:com|org|net|id|co\.id|xyz|site|top|online|vip|live|club|cc|me|info|io)(?:/[^\s<>"]*)?)'
 IP_URL_REGEX = r'(?:https?://)?(?:\d{1,3}\.){3}\d{1,3}'
@@ -135,9 +136,10 @@ async def _inspect_single_url(raw_url: str) -> Dict[str, Any]:
     ssl_task = inspect_ssl_certificate(domain)
     domain_task = inspect_domain_registration(domain)
     scrape_task = scrape_web_sample(fetch_url)
+    rep_task = default_reputation_adapter.check_reputation(domain)
 
-    ssl_info, domain_info, web_info = await asyncio.gather(
-        ssl_task, domain_task, scrape_task, return_exceptions=True
+    ssl_info, domain_info, web_info, rep_info = await asyncio.gather(
+        ssl_task, domain_task, scrape_task, rep_task, return_exceptions=True
     )
 
     if isinstance(ssl_info, Exception):
@@ -146,9 +148,16 @@ async def _inspect_single_url(raw_url: str) -> Dict[str, Any]:
         domain_info = {"age_days": None, "creation_date": "Data RDAP Terbatas", "registrar": "Umum"}
     if isinstance(web_info, Exception):
         web_info = {"accessible": False, "title": "Situs Tidak Dapat Diakses", "sample": ""}
+    if isinstance(rep_info, Exception):
+        rep_info = {"status": "inconclusive", "threat_category": "Error", "risk_contribution": 0}
 
     flags = []
     score = 0
+
+    # Threat Intelligence Feed Indicator
+    if isinstance(rep_info, dict) and rep_info.get("status") in ("malicious", "suspicious"):
+        flags.append(f"Intelijen Ancaman ({rep_info.get('threat_category', 'Threat')}): {rep_info.get('evidence', '')}")
+        score += rep_info.get("risk_contribution", 30)
 
     if domain_info.get("age_days") is not None:
         if domain_info["age_days"] < 30:
