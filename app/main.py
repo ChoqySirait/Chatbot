@@ -12,6 +12,8 @@ from app.core.security import sanitize_user_input, check_prompt_injection
 from app.core.heuristics import analyze_heuristics
 from app.services.ai_service import process_chat_with_gemini
 from app.core.logging_config import setup_logging
+from app.core.middleware import SecurityHeadersMiddleware, RateLimitAndPayloadMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 # Inisialisasi logging terpusat dengan filter privasi
 setup_logging()
@@ -20,6 +22,22 @@ app = FastAPI(
     title="SecurAI — Digital Trust & Incident Assistance Hub",
     description="Platform Triage Anti-Fraud, Multi-Vector Threat Intelligence & Incident Assistance",
     version="2.5.0"
+)
+
+# Registrasi middleware keamanan dan rate limiting (SEC-08, SEC-09)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitAndPayloadMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
