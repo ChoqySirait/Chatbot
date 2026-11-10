@@ -10,9 +10,11 @@ export const translations = {
     },
     nav: {
       analyze: 'Triage & Analisis',
+      threatIntel: 'Intel Ancaman & MITRE',
       incidents: 'Kasus Insiden',
       evidence: 'Brankas Bukti (SHA-256)',
       reports: 'Surat Sanggahan & Laporan',
+      learn: 'Pusat Edukasi & Simulasi',
       settings: 'Pengaturan & Penyimpanan',
     },
     modes: {
@@ -94,6 +96,23 @@ export const translations = {
       btnCopyReport: 'Salin Teks Surat',
       btnPrintReport: 'Cetak / Simpan PDF',
     },
+    threatIntelTab: {
+      title: 'Intelijen Ancaman & Matriks MITRE ATT&CK',
+      subtitle: 'Eksplorasi taktik musuh siber, teknik phishing perbankan, dan indikator IoC.',
+      matrixTitle: 'Matriks Taktik & Teknik MITRE ATT&CK Enterprise',
+      techniqueDetail: 'Rincian Teknik & Panduan Mitigasi',
+      adversaryGoal: 'Tujuan & Modus Penyerang',
+      detectionLogic: 'Logika Deteksi & Heuristik SecurAI',
+      mitigationAction: 'Langkah Pencegahan & Mitigasi',
+    },
+    learnTab: {
+      title: 'Pusat Edukasi Keamanan & Simulasi Phishing',
+      subtitle: 'Pelajari modus penipuan online terkini dan uji kewaspadaan Anda melalui simulasi kuis interaktif.',
+      caseStudies: 'Studi Kasus Penipuan Siber Terpopuler',
+      quizTitle: 'Simulasi Kuis Deteksi Phishing',
+      btnStartQuiz: 'Mulai Uji Kewaspadaan',
+      scoreResult: 'Skor Kewaspadaan Anda',
+    },
     settingsTab: {
       title: 'Pengaturan & Privasi Lokal',
       subtitle: 'Kelola penyimpanan browser IndexedDB dan konfigurasi operasional SecurAI.',
@@ -127,9 +146,11 @@ export const translations = {
     },
     nav: {
       analyze: 'Triage & Analyze',
+      threatIntel: 'Threat Intel & MITRE',
       incidents: 'Incident Cases',
       evidence: 'Evidence Vault (SHA-256)',
       reports: 'Dispute Letters & Reports',
+      learn: 'Learning Center & Quiz',
       settings: 'Settings & Storage',
     },
     modes: {
@@ -210,6 +231,23 @@ export const translations = {
       btnGenerate: 'Generate Official Dispute Letter',
       btnCopyReport: 'Copy Letter Text',
       btnPrintReport: 'Print / Save as PDF',
+    },
+    threatIntelTab: {
+      title: 'Threat Intelligence & MITRE ATT&CK Matrix',
+      subtitle: 'Explore cyber adversary tactics, banking phishing techniques, and IoC indicators.',
+      matrixTitle: 'MITRE ATT&CK Enterprise Tactics & Techniques Matrix',
+      techniqueDetail: 'Technique Breakdown & Mitigation Guidance',
+      adversaryGoal: 'Adversary Objective & MO',
+      detectionLogic: 'SecurAI Detection Logic & Heuristics',
+      mitigationAction: 'Mitigation Actions & Controls',
+    },
+    learnTab: {
+      title: 'Security Learning Center & Phishing Simulator',
+      subtitle: 'Learn modern online scam tactics and test your vigilance with an interactive quiz.',
+      caseStudies: 'Trending Cyber Scam Case Studies',
+      quizTitle: 'Phishing Detection Quiz Simulator',
+      btnStartQuiz: 'Start Vigilance Quiz',
+      scoreResult: 'Your Vigilance Score',
     },
     settingsTab: {
       title: 'Settings & Local Privacy',

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Search, FolderGit2, ShieldCheck, FileCheck2, Settings2 } from 'lucide-react';
+import { Search, FolderGit2, ShieldCheck, FileCheck2, Settings2, Terminal, GraduationCap } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
-export type TabType = 'analyze' | 'incidents' | 'evidence' | 'reports' | 'settings';
+export type TabType = 'analyze' | 'threat-intel' | 'incidents' | 'evidence' | 'reports' | 'learn' | 'settings';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -21,9 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems: { id: TabType; label: string; icon: React.FC<{ className?: string }>; count?: number }[] = [
     { id: 'analyze', label: t.nav.analyze, icon: Search },
+    { id: 'threat-intel', label: t.nav.threatIntel, icon: Terminal },
     { id: 'incidents', label: t.nav.incidents, icon: FolderGit2, count: incidentsCount },
     { id: 'evidence', label: t.nav.evidence, icon: ShieldCheck, count: evidenceCount },
     { id: 'reports', label: t.nav.reports, icon: FileCheck2 },
+    { id: 'learn', label: t.nav.learn, icon: GraduationCap },
     { id: 'settings', label: t.nav.settings, icon: Settings2 },
   ];
 
