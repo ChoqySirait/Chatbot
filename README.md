@@ -5,7 +5,7 @@
 [![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests Passed](https://img.shields.io/badge/Pytest-47%2F47%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests Passed](https://img.shields.io/badge/Pytest-48%2F48%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
@@ -44,7 +44,13 @@
 
 ## 📊 Status Implementasi Fitur
 
-### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1 & 2)
+### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1, 2, & 3)
+- **Modern React + Vite + TypeScript Frontend (Milestone 3):** Antarmuka modern, interaktif, dan modular menggunakan React 19, TypeScript, Tailwind CSS v4, dan Lucide Icons di `frontend/`.
+- **Local-First Storage Engine (Dexie.js / IndexedDB) (Milestone 3):** Seluruh buku kasus insiden (*Incident Casebook*), kronologi investigasi (*Timeline*), dan brankas bukti (*Evidence Vault*) disimpan secara mandiri di browser pengguna tanpa retensi data sensitif di server (*zero server-side retention*).
+- **Dual-Mode Presentation (Consumer vs Analyst SOC Mode) (Milestone 3):** Memetakan objek kanonis yang sama ke dalam mode panduan ramah konsumen (ramah, bebas jargon, tindakan darurat) atau konsol SOC teknis (telemetri jaringan, rute redirect, MITRE ATT&CK, raw JSON kanonikal).
+- **Bilingual i18n Localization (ID / EN) (Milestone 3):** Sistem pelokalan bilingual instan 1-klik untuk seluruh navigasi, kartu risiko, panduan mitigasi, dan kamus istilah keamanan.
+- **Bank Dispute Letter & Police Report Generator (Milestone 3):** Pembuat draf surat resmi sanggahan transaksi bank (*chargeback*) dan laporan BAP kejahatan siber siap cetak/ekspor PDF.
+- **Client-Side SHA-256 Seal & Manifest Verifier (Milestone 3):** Perhitungan hash kriptografis SHA-256 langsung di browser via Web Crypto API untuk verifikasi integritas rantai bukti (*chain of custody*).
 - **Hardened Anti-SSRF Guard (SEC-01):** Validasi skema (`http/https`), resolusi lengkap DNS (A/AAAA), penolakan mutlak IP privat (RFC 1918), loopback, link-local, carrier-grade NAT, IPv4-mapped IPv6, dan cloud metadata (`169.254.169.254`). Rejeksi total pada domain DNS campuran (*mixed public/private records*).
 - **Brand Impersonation & Typosquatting Engine (SEC-02):** Ekstraksi domain berbasis *Public Suffix List* (PSL) lokal (offline, zero-network). Membedakan secara akurat antara domain resmi merek (BCA, Tokopedia, Shopee, Mandiri, BRI, BNI, Dana, GoPay, OVO, Blibli, WhatsApp) dan domain tiruan, menghilangkan *false positive* pada domain resmi (`bca.co.id`, `tokopedia.com`).
 - **Hardened Web Content Scraper (SEC-03):** Pengambilan sampel web dengan verifikasi TLS aktif (`verify=True`), penanganan pengalihan manual (*manual redirect tracking*) maksimal 5 hop dengan validasi ulang SSRF pada setiap hop, pembatasan body respons streaming maksimal 1 MB, dan koneksi socket aman dengan preservasi SNI.
@@ -57,11 +63,10 @@
 - **Graceful Degradation Fallback (AI-05):** Analisis deterministik lokal tetap aktif penuh bila server AI eksternal offline, kuota habis, atau API key belum dikonfigurasi.
 - **Modular API v1 Endpoints (Section 5.4):** Endpoint terpisah `/api/v1/analyze/url`, `/api/v1/analyze/message`, `/api/v1/health`, dan `/api/v1/ready`.
 - **Privacy-Preserving Logging (SEC-07):** Logging terpusat dengan filter redaksi otomatis terhadap token, API key, dan kredensial sensitif.
-- **Reproducible Test Environment (ENG-01):** 47 unit, security, and integration tests terisolasi dengan 100% *deterministic mocks*, berjalan offline dalam ~2 detik.
+- **Reproducible Test Environment (ENG-01):** 48 unit, security, and integration tests terisolasi dengan 100% *deterministic mocks*, berjalan offline dalam ~2 detik.
 
-### ⏳ Fitur dalam Roadmap Berikutnya (Milestone 3 & 4)
-- **Milestone 3 (Target Berikutnya):** Migrasi antarmuka ke React + Vite + TypeScript, penyimpanan lokal *Local-First* via Dexie.js (IndexedDB), dan dukungan bilingual dinamis (Bahasa Indonesia & English).
-- **Milestone 4:** Konsol Khusus **Analyst Mode (SOC L1 Triage)**, visualisasi matriks MITRE ATT&CK interaktif, inspeksi raw header HTTP, serta ekspor laporan forensik komprehensif (JSON/Markdown).
+### ⏳ Fitur dalam Roadmap Berikutnya (Milestone 4)
+- **Milestone 4:** Peningkatan Visualisasi Matriks MITRE ATT&CK interaktif, integrasi eksternal threat feed (MISP/OpenCTI stubs), audit trail export, dan automated benchmark testing.
 
 ---
 
@@ -182,13 +187,23 @@ Seluruh pengujian dirancang 100% offline dengan mocking deterministik:
 ```bash
 pytest -v
 ```
-*Hasil aktual:* 47 test cases lulus 100% dalam < 2 detik.
+*Hasil aktual:* 48 test cases lulus 100% dalam < 2 detik.
 
-### 6. Menjalankan Backend Server
+### 6. Menjalankan Frontend & Membangun Production Bundle
+Aplikasi frontend menggunakan React 19, TypeScript, dan Vite pada folder `frontend/`:
+```bash
+# Menjalankan frontend development server (dengan API proxy ke port 8000)
+npm --prefix frontend run dev
+
+# Membangun bundle produksi ke app/static/dist
+npm --prefix frontend run build
+```
+
+### 7. Menjalankan Backend Server
 ```bash
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
-Buka browser pada alamat: `http://127.0.0.1:8000`
+Buka browser pada alamat: `http://127.0.0.1:8000` (FastAPI secara otomatis menyajikan bundle React modern).
 
 ---
 
@@ -198,8 +213,8 @@ Buka browser pada alamat: `http://127.0.0.1:8000`
 flowchart LR
     M1["Milestone 1 (SELESAI)\n- Hardened SSRF & DNS\n- Brand PSL Engine\n- Hardened Scraper\n- SHA-256 Manifest"]
     M2["Milestone 2 (SELESAI)\n- Gemini Structured JSON\n- Multi-URL Analysis\n- Message Intelligence\n- API v1 Endpoints\n- 47 Mocked Tests"]
-    M3["Milestone 3 (Target)\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)"]
-    M4["Milestone 4\n- Analyst Mode (SOC L1)\n- MITRE ATT&CK Matrix\n- Raw Forensic Exporter\n- E2E Validation"]
+    M3["Milestone 3 (SELESAI)\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)\n- 48 Mocked Tests"]
+    M4["Milestone 4 (Target)\n- Analyst Mode (SOC L1)\n- MITRE ATT&CK Matrix\n- Raw Forensic Exporter\n- E2E Validation"]
 
     M1 --> M2 --> M3 --> M4
 ```

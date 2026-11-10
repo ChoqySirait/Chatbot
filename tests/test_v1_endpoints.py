@@ -101,3 +101,9 @@ def test_logging_privacy_filter():
     f.filter(rec)
     assert "secret12345" not in rec.msg
     assert "***REDACTED***" in rec.msg
+
+
+def test_serve_index_endpoint():
+    resp = client.get("/")
+    assert resp.status_code == 200
+

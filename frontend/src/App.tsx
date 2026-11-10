@@ -3,12 +3,13 @@ import { Header } from './components/layout/Header';
 import { Navbar, type TabType } from './components/layout/Navbar';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ModeProvider, useMode } from './context/ModeContext';
+import { AnalyzeWorkspace } from './components/analyze/AnalyzeWorkspace';
 import { IncidentManager } from './components/incidents/IncidentManager';
 import { EvidenceVault } from './components/evidence/EvidenceVault';
 import { ReportGenerator } from './components/reports/ReportGenerator';
 import { SettingsManager } from './components/settings/SettingsManager';
 import { db } from './db';
-import { Terminal, User, Lock, Search } from 'lucide-react';
+import { Terminal, User, Lock } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('analyze');
@@ -81,22 +82,13 @@ const AppContent: React.FC = () => {
         </div>
 
         {/* Tab Content Router */}
+        {activeTab === 'analyze' && (
+          <AnalyzeWorkspace onSwitchTab={(tab) => setActiveTab(tab)} />
+        )}
         {activeTab === 'incidents' && <IncidentManager />}
         {activeTab === 'evidence' && <EvidenceVault />}
         {activeTab === 'reports' && <ReportGenerator />}
         {activeTab === 'settings' && <SettingsManager />}
-        {activeTab === 'analyze' && (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center">
-            <div className="inline-flex p-3 rounded-2xl bg-cyan-950/40 border border-cyan-800/40 text-cyan-400 mb-4">
-              <Search className="w-8 h-8" />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2">{t.analyzeTab.title}</h2>
-            <p className="text-slate-400 text-sm max-w-xl mx-auto mb-6">{t.analyzeTab.subtitle}</p>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-cyan-300 font-mono border border-slate-700">
-              Unified Analyzer Workspace (Ready for Commit 3 integration)
-            </div>
-          </div>
-        )}
       </main>
 
       <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">

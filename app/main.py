@@ -23,6 +23,11 @@ app = FastAPI(
 )
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+DIST_DIR = os.path.join(STATIC_DIR, "dist")
+DIST_ASSETS = os.path.join(DIST_DIR, "assets")
+
+if os.path.exists(DIST_ASSETS):
+    app.mount("/assets", StaticFiles(directory=DIST_ASSETS), name="assets")
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -38,6 +43,9 @@ class MessageAnalysisRequest(BaseModel):
 
 @app.get("/")
 def serve_index():
+    dist_index = os.path.join(DIST_DIR, "index.html")
+    if os.path.exists(dist_index):
+        return FileResponse(dist_index)
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
