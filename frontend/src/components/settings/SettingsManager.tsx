@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Settings2,
+  Database,
+  Trash2,
+  Download,
+  Server,
+  ShieldCheck,
+  Cpu,
+  RefreshCw,
+} from 'lucide-react';
+import { db, purgeAllLocalVault } from '../../db';
+import { useLanguage } from '../../context/LanguageContext';
+
+export const SettingsManager: React.FC = () => {
+  const { t } = useLanguage();
+  const [incidentCount, setIncidentCount] = useState(0);
+  const [evidenceCount, setEvidenceCount] = useState(0);
+  const [historyCount, setHistoryCount] = useState(0);
+  const [backendHealth, setBackendHealth] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadStats = async () => {
+    const incs = await db.incidents.count();
+    const evs = await db.evidence.count();
+    const hists = await db.analysisHistory.count();
+    setIncidentCount(incs);
+    setEvidenceCount(evs);
+    setHistoryCount(hists);
+  };
+
+  const checkBackend = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/v1/health');
+      if (res.ok) {
+        const data = await res.json();
+        setBackendHealth(data);
+      } else {
+        setBackendHealth({ status: 'error', error: `HTTP ${res.status}` });
+      }
+    } catch (err) {
+      setBackendHealth({ status: 'offline', error: String(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+    checkBackend();
+  }, []);
+
+  const handleWipeData = async () => {
+    if (!confirm(t.settingsTab.clearConfirm)) return;
+    await purgeAllLocalVault();
+    await loadStats();
+    alert('Seluruh data IndexedDB lokal telah dibersihkan!');
+  };
+
+  const handleExportFullBackup = async () => {
+    const incidents = await db.incidents.toArray();
+    const timeline = await db.timeline.toArray();
+    const evidence = await db.evidence.toArray();
+    const history = await db.analysisHistory.toArray();
+
+    const backup = {
+      app: 'SecurAI',
+      version: '1.2.0',
+      exportedAt: new Date().toISOString(),
+      incidents,
+      timeline,
+      evidence,
+      analysisHistory: history,
+    };
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `securai-full-vault-backup-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <Settings2 className="w-5 h-5 text-cyan-400" />
+          <span>{t.settingsTab.title}</span>
+        </h2>
+        <p className="text-xs text-slate-400 mt-0.5">{t.settingsTab.subtitle}</p>
+      </div>
+
+      {/* Storage Information Card */}
+      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-cyan-400" />
+            <h3 className="font-semibold text-white text-sm">{t.settingsTab.storageTitle}</h3>
+          </div>
+          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+            Local Retention Only
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-400 leading-relaxed">
+          {t.settingsTab.storageDesc}
+        </p>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-3 pt-2">
+          <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-center">
+            <span className="text-xl font-bold font-mono text-cyan-400">{incidentCount}</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">Kasus Insiden</span>
+          </div>
+
+          <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-center">
+            <span className="text-xl font-bold font-mono text-purple-400">{evidenceCount}</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">Artefak Bukti</span>
+          </div>
+
+          <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-center">
+            <span className="text-xl font-bold font-mono text-blue-400">{historyCount}</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">Riwayat Analisis</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-800 flex-wrap">
+          <button
+            type="button"
+            onClick={handleExportFullBackup}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+          >
+            <Download className="w-4 h-4 text-cyan-400" />
+            <span>Unduh Cadangan Lengkap (.JSON)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleWipeData}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs font-semibold border border-rose-800/60 transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-rose-400" />
+            <span>{t.settingsTab.btnClearAll}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Backend & Security Engine Card */}
+      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Server className="w-5 h-5 text-cyan-400" />
+            <h3 className="font-semibold text-white text-sm">{t.settingsTab.apiTitle}</h3>
+          </div>
+
+          <button
+            type="button"
+            onClick={checkBackend}
+            className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Periksa Ulang</span>
+          </button>
+        </div>
+
+        <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2 text-xs font-mono">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400">Endpoint:</span>
+            <span className="text-slate-200">/api/v1 (FastAPI)</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-slate-400">Status Response:</span>
+            <span className="text-emerald-400 font-semibold">
+              {backendHealth ? JSON.stringify(backendHealth) : 'Belum diperiksa'}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>SSRF Protection: Pinned Socket + Strict DNS Resolution (SEC-01)</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+            <span>Brand Impersonation & PSL: Offline Public Suffix List (SEC-02)</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <Cpu className="w-4 h-4 text-purple-400" />
+            <span>AI Orchestration: Gemini Structured JSON Output (ANA-02)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
