@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
-import { FileText, Copy, Check, Printer, ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  FileText,
+  Copy,
+  Check,
+  Printer,
+  ShieldAlert,
+  FileCode,
+  Download,
+  FolderGit2,
+  FileCheck,
+} from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { db } from '../../db';
+import type { IncidentCase } from '../../types/api';
+import { generateMarkdownDossier, downloadFile } from '../../utils/reportExporter';
 
 export const ReportGenerator: React.FC = () => {
   const { t, language } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'dispute' | 'dossier'>('dispute');
+
+  // Dispute form state
   const [bankName, setBankName] = useState('Bank Central Asia (BCA)');
   const [incidentDate, setIncidentDate] = useState(new Date().toISOString().split('T')[0]);
   const [lossAmount, setLossAmount] = useState('2.500.000');
@@ -12,6 +28,53 @@ export const ReportGenerator: React.FC = () => {
   const [scammerAccount, setScammerAccount] = useState('');
   const [description, setDescription] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Forensic dossier state
+  const [cases, setCases] = useState<IncidentCase[]>([]);
+  const [selectedCaseId, setSelectedCaseId] = useState<string>('');
+  const [dossierMarkdown, setDossierMarkdown] = useState<string>('');
+  const [loadingDossier, setLoadingDossier] = useState(false);
+
+  // Load available cases for dossier
+  useEffect(() => {
+    db.incidents.reverse().sortBy('createdAt').then((list) => {
+      setCases(list);
+      if (list.length > 0 && !selectedCaseId) {
+        setSelectedCaseId(list[0].caseId);
+      }
+    });
+  }, []);
+
+  // Generate dossier whenever selectedCaseId or language changes
+  useEffect(() => {
+    if (!selectedCaseId) {
+      setDossierMarkdown('');
+      return;
+    }
+
+    const buildDossier = async () => {
+      setLoadingDossier(true);
+      try {
+        const incident = await db.incidents.where('caseId').equals(selectedCaseId).first();
+        if (!incident) return;
+
+        const timeline = await db.timeline.where('incidentId').equals(selectedCaseId).sortBy('timestamp');
+        const evidence = await db.evidence.where('incidentId').equals(selectedCaseId).sortBy('capturedAt');
+
+        const md = await generateMarkdownDossier({
+          incident,
+          timeline,
+          evidence,
+          locale: language,
+        });
+        setDossierMarkdown(md);
+      } finally {
+        setLoadingDossier(false);
+      }
+    };
+
+    buildDossier();
+  }, [selectedCaseId, language]);
 
   const generateLetterText = () => {
     if (language === 'en') {
@@ -96,8 +159,8 @@ __________________________
 (${victimName || 'Tanda Tangan Pelapor'})`;
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generateLetterText());
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -106,9 +169,34 @@ __________________________
     window.print();
   };
 
+  const handleDownloadMarkdown = () => {
+    if (!dossierMarkdown) return;
+    downloadFile(`securai-forensic-dossier-${selectedCaseId}.md`, dossierMarkdown, 'text/markdown');
+  };
+
+  const handleDownloadJson = async () => {
+    if (!selectedCaseId) return;
+    const incident = await db.incidents.where('caseId').equals(selectedCaseId).first();
+    const timeline = await db.timeline.where('incidentId').equals(selectedCaseId).toArray();
+    const evidence = await db.evidence.where('incidentId').equals(selectedCaseId).toArray();
+
+    const jsonContent = JSON.stringify(
+      {
+        schemaVersion: '1.0',
+        exportedAt: new Date().toISOString(),
+        incident,
+        timeline,
+        evidence,
+      },
+      null,
+      2
+    );
+    downloadFile(`securai-canonical-report-${selectedCaseId}.json`, jsonContent, 'application/json');
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header & Sub-Tabs */}
       <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -118,134 +206,239 @@ __________________________
           <p className="text-xs text-slate-400 mt-0.5">{t.reportsTab.subtitle}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Tab switch between Dispute letter and Forensic Dossier */}
+        <div className="flex space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
           <button
             type="button"
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+            onClick={() => setActiveTab('dispute')}
+            className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+              activeTab === 'dispute'
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? t.common.copied : t.reportsTab.btnCopyReport}</span>
+            <FileCheck className="w-3.5 h-3.5" />
+            <span>Surat Sanggahan Bank</span>
           </button>
 
           <button
             type="button"
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 transition-all"
+            onClick={() => setActiveTab('dossier')}
+            className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+              activeTab === 'dossier'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
-            <Printer className="w-4 h-4" />
-            <span>{t.reportsTab.btnPrintReport}</span>
+            <FileCode className="w-3.5 h-3.5" />
+            <span>Dosir Forensik Insiden (.MD/JSON)</span>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Form Inputs on Left */}
-        <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Parameter Surat Resmi
-          </h3>
+      {/* VIEW 1: Bank Dispute Letter */}
+      {activeTab === 'dispute' && (
+        <div className="space-y-4">
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => handleCopy(generateLetterText())}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              <span>{copied ? t.common.copied : t.reportsTab.btnCopyReport}</span>
+            </button>
 
-          <div className="space-y-3 text-xs">
-            <div>
-              <label className="block text-slate-400 mb-1">{t.reportsTab.recipientBank}</label>
-              <input
-                type="text"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                placeholder="Bank Central Asia (BCA) / Mandiri / BRI / Dana"
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-              />
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 transition-all"
+            >
+              <Printer className="w-4 h-4" />
+              <span>{t.reportsTab.btnPrintReport}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Parameter Surat Sanggahan
+              </h3>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">{t.reportsTab.recipientBank}</label>
+                  <input
+                    type="text"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    placeholder="Bank Central Asia (BCA) / Mandiri / BRI"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">{t.reportsTab.transactionDate}</label>
+                    <input
+                      type="date"
+                      value={incidentDate}
+                      onChange={(e) => setIncidentDate(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 mb-1">{t.reportsTab.lostAmount}</label>
+                    <input
+                      type="text"
+                      value={lossAmount}
+                      onChange={(e) => setLossAmount(e.target.value)}
+                      placeholder="2.500.000"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1">{t.reportsTab.victimName}</label>
+                    <input
+                      type="text"
+                      value={victimName}
+                      onChange={(e) => setVictimName(e.target.value)}
+                      placeholder="Nama Korban"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 mb-1">{t.reportsTab.victimAccount}</label>
+                    <input
+                      type="text"
+                      value={victimAccount}
+                      onChange={(e) => setVictimAccount(e.target.value)}
+                      placeholder="1234567890"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">{t.reportsTab.scammerAccount}</label>
+                  <input
+                    type="text"
+                    value={scammerAccount}
+                    onChange={(e) => setScammerAccount(e.target.value)}
+                    placeholder="Nomor rekening penipu atau nomor WhatsApp"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Kronologi Ringkas Kejadian</label>
+                  <textarea
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Tuliskan bagaimana Anda diarahkan ke tautan palsu..."
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-400 mb-1">{t.reportsTab.transactionDate}</label>
-                <input
-                  type="date"
-                  value={incidentDate}
-                  onChange={(e) => setIncidentDate(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-                />
+            <div className="lg:col-span-7 bg-white text-slate-900 rounded-2xl p-8 shadow-xl font-serif text-xs leading-relaxed border border-slate-300 print:border-none print:shadow-none print:p-0">
+              <div className="border-b-2 border-slate-900 pb-3 mb-4 text-center">
+                <div className="font-bold tracking-widest text-sm uppercase">SecurAI Dispute Notice</div>
+                <div className="text-[10px] text-slate-600 font-sans">Dokumen Resmi Sanggahan Transaksi & Bantuan Nasabah</div>
               </div>
 
-              <div>
-                <label className="block text-slate-400 mb-1">{t.reportsTab.lostAmount}</label>
-                <input
-                  type="text"
-                  value={lossAmount}
-                  onChange={(e) => setLossAmount(e.target.value)}
-                  placeholder="2.500.000"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-                />
+              <pre className="whitespace-pre-wrap font-serif text-slate-800 leading-normal select-all">
+                {generateLetterText()}
+              </pre>
+
+              <div className="mt-8 pt-4 border-t border-slate-300 text-[10px] text-slate-500 font-sans flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
+                <span>Dokumen dicetak secara mandiri. Segel bukti digital disimpan di brankas perangkat.</span>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-400 mb-1">{t.reportsTab.victimName}</label>
-                <input
-                  type="text"
-                  value={victimName}
-                  onChange={(e) => setVictimName(e.target.value)}
-                  placeholder="Nama Lengkap Korban"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 mb-1">{t.reportsTab.victimAccount}</label>
-                <input
-                  type="text"
-                  value={victimAccount}
-                  onChange={(e) => setVictimAccount(e.target.value)}
-                  placeholder="1234567890"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-slate-400 mb-1">{t.reportsTab.scammerAccount}</label>
-              <input
-                type="text"
-                value={scammerAccount}
-                onChange={(e) => setScammerAccount(e.target.value)}
-                placeholder="Nomor rekening penipu, bank penipu, atau nomor WhatsApp"
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-400 mb-1">Kronologi Ringkas Kejadian</label>
-              <textarea
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tuliskan urutan kejadian, pesan yang diterima, dan bagaimana Anda diarahkan melakukan transfer..."
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
-              />
             </div>
           </div>
         </div>
+      )}
 
-        {/* Formatted Letter Preview on Right */}
-        <div className="lg:col-span-7 bg-white text-slate-900 rounded-2xl p-8 shadow-xl font-serif text-xs leading-relaxed border border-slate-300 print:border-none print:shadow-none print:p-0">
-          <div className="border-b-2 border-slate-900 pb-3 mb-4 text-center">
-            <div className="font-bold tracking-widest text-sm uppercase">SecurAI Incident Assistance Documentation</div>
-            <div className="text-[10px] text-slate-600 font-sans">Dokumen Resmi Bantuan Nasabah & Pelaporan Penipuan Digital</div>
+      {/* VIEW 2: Comprehensive Forensic Dossier (Markdown / JSON) */}
+      {activeTab === 'dossier' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <FolderGit2 className="w-4 h-4 text-purple-400 shrink-0" />
+              <label className="text-xs text-slate-300 font-semibold shrink-0">Pilih Kasus Insiden:</label>
+              {cases.length === 0 ? (
+                <span className="text-xs text-slate-500 italic">Belum ada kasus insiden tersimpan</span>
+              ) : (
+                <select
+                  value={selectedCaseId}
+                  onChange={(e) => setSelectedCaseId(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-purple-500"
+                >
+                  {cases.map((c) => (
+                    <option key={c.caseId} value={c.caseId}>
+                      [{c.caseId}] {c.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => handleCopy(dossierMarkdown)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>Salin Teks</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadMarkdown}
+                disabled={!dossierMarkdown}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md disabled:opacity-50"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Unduh Markdown (.MD)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadJson}
+                disabled={!selectedCaseId}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 disabled:opacity-50"
+              >
+                <FileCode className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Unduh JSON</span>
+              </button>
+            </div>
           </div>
 
-          <pre className="whitespace-pre-wrap font-serif text-slate-800 leading-normal select-all">
-            {generateLetterText()}
-          </pre>
-
-          <div className="mt-8 pt-4 border-t border-slate-300 text-[10px] text-slate-500 font-sans flex items-center gap-1.5">
-            <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
-            <span>Dokumen dibuat menggunakan standar bantuan SecurAI. Bukti forensik tersimpan secara mandiri pada perangkat pemohon.</span>
+          {/* Markdown Dossier Preview */}
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto max-h-[700px] overflow-y-auto">
+            {loadingDossier ? (
+              <div className="text-center py-12 text-slate-500 text-xs">Menyusun dosir forensik...</div>
+            ) : dossierMarkdown ? (
+              <pre className="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed select-all">
+                {dossierMarkdown}
+              </pre>
+            ) : (
+              <div className="text-center py-12 text-slate-500 text-xs">
+                Pilih atau buat kasus di tab <strong>Kasus Insiden</strong> terlebih dahulu untuk mengekspor dosir forensik.
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
