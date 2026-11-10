@@ -120,6 +120,14 @@ function updateTelemetryPanel(networkIntel, category, score) {
     } else if (category === "Resmi/Aman") {
         intelBadge.className = "text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded";
         intelBadge.textContent = "TERVERIFIKASI";
+    } else {
+        if (score === 0) {
+            intelBadge.className = "text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded";
+            intelBadge.textContent = "TERVERIFIKASI (0/100)";
+        } else {
+            intelBadge.className = "text-[10px] font-mono bg-[#142640] text-blue-300 border border-[#1e385e] px-2 py-0.5 rounded";
+            intelBadge.textContent = `SKOR: ${score}/100`;
+        }
     }
 
     // Tampilkan notifikasi titik merah di tab ponsel jika pengguna sedang berada di tab chat

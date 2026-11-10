@@ -15,6 +15,7 @@ class ChatRequest(BaseModel):
 # Blok skema hasil telemetri keamanan lokal
 class HeuristicResult(BaseModel):
     has_suspicious_elements: bool
+    inspection_performed: bool = False
     detected_urls: List[str] = Field(default_factory=list)
     defanged_urls: List[str] = Field(default_factory=list)
     risk_flags: List[str] = Field(default_factory=list)

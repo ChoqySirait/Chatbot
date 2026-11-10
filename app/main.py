@@ -46,7 +46,11 @@ async def handle_chat(req: ChatRequest):
     )
 
     heuristic_result = None
-    if heuristics_dict["has_suspicious_elements"]:
+    if (
+        heuristics_dict.get("inspection_performed")
+        or heuristics_dict.get("network_intel") is not None
+        or heuristics_dict.get("has_suspicious_elements")
+    ):
         heuristic_result = HeuristicResult(**heuristics_dict)
 
     return ChatResponse(
