@@ -5,7 +5,7 @@
 [![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests Passed](https://img.shields.io/badge/Pytest-33%2F33%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests Passed](https://img.shields.io/badge/Pytest-47%2F47%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
@@ -44,44 +44,47 @@
 
 ## 📊 Status Implementasi Fitur
 
-Berdasarkan hasil baseline audit dan penyelesaian **Milestone 1 (Secure Foundation & Backend Reliability)**:
-
-### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1)
+### ✅ Fitur yang Sudah Aktif & Teruji (Milestone 1 & 2)
 - **Hardened Anti-SSRF Guard (SEC-01):** Validasi skema (`http/https`), resolusi lengkap DNS (A/AAAA), penolakan mutlak IP privat (RFC 1918), loopback, link-local, carrier-grade NAT, IPv4-mapped IPv6, dan cloud metadata (`169.254.169.254`). Rejeksi total pada domain DNS campuran (*mixed public/private records*).
 - **Brand Impersonation & Typosquatting Engine (SEC-02):** Ekstraksi domain berbasis *Public Suffix List* (PSL) lokal (offline, zero-network). Membedakan secara akurat antara domain resmi merek (BCA, Tokopedia, Shopee, Mandiri, BRI, BNI, Dana, GoPay, OVO, Blibli, WhatsApp) dan domain tiruan, menghilangkan *false positive* pada domain resmi (`bca.co.id`, `tokopedia.com`).
 - **Hardened Web Content Scraper (SEC-03):** Pengambilan sampel web dengan verifikasi TLS aktif (`verify=True`), penanganan pengalihan manual (*manual redirect tracking*) maksimal 5 hop dengan validasi ulang SSRF pada setiap hop, pembatasan body respons streaming maksimal 1 MB, dan koneksi socket aman dengan preservasi SNI.
 - **Cryptographic Evidence Manifest (SEC-04):** Pembuatan segel bukti digital SHA-256 64-karakter heksadesimal penuh dilengkapi manifest kanonikal deterministik (identitas artefak, MIME, ukuran, timestamp UTC ISO 8601, dan raw SHA-256).
-- **Konsistensi Telemetri Respons (ENG-02):** Backend konsisten mengembalikan data telemetri teknis (SSL, umur domain, judul halaman) meskipun skor risiko bernilai nol pada domain resmi yang aman.
-- **Automated URL Defanging:** Menetralkan tautan mencurigakan (`hxxps[://]domain[.]com`).
-- **Reproducible Test Environment (ENG-01):** 33 unit dan security tests terisolasi dengan 100% *deterministic mocks* (DNS, socket, HTTP, SSL), berjalan dalam ~2 detik secara offline.
+- **Canonical Structured Analysis Schema (ANA-01):** Kontrak data kanonis Pydantic terstandarisasi (`analysis_id`, `classification`, `risk_score`, `findings`, `mitre_techniques`, `recommended_actions`, `limitations`).
+- **Multi-URL Analysis Engine (ANA-05):** Pemeriksaan paralel independen terhadap seluruh tautan unik (hingga 5 URL) dalam satu sesi input tanpa saling menggagalkan.
+- **Message Social Engineering Intelligence (ANA-06):** Engine pendeteksi desakan waktu palsu, permintaan panik OTP/kredensial, peniruan CS resmi, dan file APK trojan dengan rule ID terstruktur (`MSG-URGENCY-001`, `MSG-OTP-HARVEST-001`, dll.).
+- **Gemini Structured JSON Output (AI-02):** Pemanggilan Google GenAI menggunakan Pydantic JSON Schema (`response_schema`), mengeliminasi kesalahan *substring matching* ("Phishing", "Penipuan").
+- **Dual-Mode System Prompts (AI-06):** Instruksi sistem terpisah untuk Consumer Mode (ramah, solutif, empatik) dan Analyst Mode (teknis, objektif, IoC, MITRE taxonomy).
+- **Graceful Degradation Fallback (AI-05):** Analisis deterministik lokal tetap aktif penuh bila server AI eksternal offline, kuota habis, atau API key belum dikonfigurasi.
+- **Modular API v1 Endpoints (Section 5.4):** Endpoint terpisah `/api/v1/analyze/url`, `/api/v1/analyze/message`, `/api/v1/health`, dan `/api/v1/ready`.
+- **Privacy-Preserving Logging (SEC-07):** Logging terpusat dengan filter redaksi otomatis terhadap token, API key, dan kredensial sensitif.
+- **Reproducible Test Environment (ENG-01):** 47 unit, security, and integration tests terisolasi dengan 100% *deterministic mocks*, berjalan offline dalam ~2 detik.
 
-### ⏳ Fitur dalam Roadmap (Belum Aktif)
-- **Milestone 2:** Gemini Structured JSON Output (kontrak skema Pydantic ketat), prompt adaptif terpisah untuk Konsumen dan Analis, serta logging error terstruktur.
-- **Milestone 3:** Migrasi antarmuka ke React + Vite + TypeScript, penyimpanan lokal *Local-First* via Dexie.js (IndexedDB), dan dukungan bilingual dinamis (Bahasa Indonesia & English).
+### ⏳ Fitur dalam Roadmap Berikutnya (Milestone 3 & 4)
+- **Milestone 3 (Target Berikutnya):** Migrasi antarmuka ke React + Vite + TypeScript, penyimpanan lokal *Local-First* via Dexie.js (IndexedDB), dan dukungan bilingual dinamis (Bahasa Indonesia & English).
 - **Milestone 4:** Konsol Khusus **Analyst Mode (SOC L1 Triage)**, visualisasi matriks MITRE ATT&CK interaktif, inspeksi raw header HTTP, serta ekspor laporan forensik komprehensif (JSON/Markdown).
 
 ---
 
 ## 🔬 Arsitektur & Alur Data Sistem
 
-SecurAI memadukan evaluasi heuristik lokal deterministik dan penalaran kognitif AI dalam arsitektur bertahap:
+SecurAI memadukan evaluasi heuristik lokal deterministik dan penalaran kognitif AI dalam arsitektur modular bertahap:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Pengguna / Analis
     participant UI as Antarmuka Konsol
-    participant GW as FastAPI Gateway
+    participant GW as FastAPI Gateway (v1 & Chat API)
     participant SEC as SSRF & Safe DNS Guard
-    participant Core as Parallel Telemetry Engine (asyncio)
-    participant AI as AI Cognitive Service (Gemini)
+    participant Core as Parallel Telemetry & Heuristic Engine
+    participant AI as AI Structured Orchestrator (Gemini)
 
     User->>UI: Input Tautan / Pesan / Screenshot
-    UI->>GW: POST /api/chat (JSON Payload)
+    UI->>GW: POST /api/chat atau /api/v1/analyze/*
     
     rect rgb(11, 25, 44)
         Note over GW,SEC: Tahap 1: Validasi Keamanan Input & Anti-SSRF
-        GW->>SEC: Validasi Skema, Hostname & Resolusi DNS
+        GW->>SEC: Validasi Skema, Hostname & Resolusi DNS A/AAAA
         alt DNS Menghasilkan IP Privat / Non-Global
             SEC-->>GW: Tolak Permintaan (SSRF Violation)
         else Seluruh Alamat IP Global & Aman
@@ -93,14 +96,20 @@ sequenceDiagram
             and HTTP Scraper Terkendali
                 Core->>Core: GET (verify=True, max 1MB stream, manual redirects)
             end
-            Core->>Core: Evaluasi Typosquatting (PSL) & Cetak SHA-256 Manifest
+            Core->>Core: Evaluasi Typosquatting (PSL), Pesan & Cetak SHA-256 Manifest
         end
     end
 
     Core->>AI: Kirim Konteks Chat + Telemetri Jaringan
-    AI-->>GW: Respon Analisis & Kategori Ancaman
-    GW-->>UI: Respons Lengkap (Balasan + Telemetri Jaringan)
-    UI-->>User: Tampilkan Indikator Risiko & Telemetri Forensik
+    alt Gemini API Aktif
+        AI->>AI: Generate Structured JSON (Pydantic Schema)
+        AI-->>GW: Output JSON Terstruktur & Valid
+    else Gemini Offline / Kuota Habis
+        Core->>GW: Aktifkan Graceful Degradation (Rule-based Fallback)
+    end
+    
+    GW-->>UI: Respons Lengkap (Balasan + Telemetri + Hasil Kanonis)
+    UI-->>User: Tampilkan Indikator Risiko, Temuan & Telemetri Forensik
 ```
 
 ---
@@ -121,6 +130,7 @@ SecurAI menerapkan prinsip *Defense-in-Depth* pada lapisan jaringan:
 - **Backend Runtime:** Python 3.10+ (Diuji pada Python 3.13)
 - **Web Framework:** FastAPI, Uvicorn (Asynchronous ASGI)
 - **HTTP & Network Engine:** HTTPX (Streaming client), Python Native `ssl` & `socket`
+- **AI Engine:** Google GenAI SDK (`gemini-2.5-flash`, `gemini-1.5-flash`) dengan Structured JSON Outputs
 - **Data Validation:** Pydantic v2
 - **Suffix & Brand Engine:** Custom Local Public Suffix List (PSL) Engine
 - **Frontend Saat Ini (Baseline):** HTML5, Tailwind CSS, Vanilla JS (ES6+)
@@ -172,7 +182,7 @@ Seluruh pengujian dirancang 100% offline dengan mocking deterministik:
 ```bash
 pytest -v
 ```
-*Hasil aktual:* 33 test cases lulus 100% dalam < 2 detik.
+*Hasil aktual:* 47 test cases lulus 100% dalam < 2 detik.
 
 ### 6. Menjalankan Backend Server
 ```bash
@@ -186,9 +196,9 @@ Buka browser pada alamat: `http://127.0.0.1:8000`
 
 ```mermaid
 flowchart LR
-    M1["Milestone 1 (SELESAI)\n- Hardened SSRF & DNS\n- Brand PSL Engine\n- Hardened Scraper\n- SHA-256 Manifest\n- 33 Mocked Tests"]
-    M2["Milestone 2\n- Gemini Structured JSON\n- Multi-Mode Prompts\n- Structured Logging\n- Error Resilience"]
-    M3["Milestone 3\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)"]
+    M1["Milestone 1 (SELESAI)\n- Hardened SSRF & DNS\n- Brand PSL Engine\n- Hardened Scraper\n- SHA-256 Manifest"]
+    M2["Milestone 2 (SELESAI)\n- Gemini Structured JSON\n- Multi-URL Analysis\n- Message Intelligence\n- API v1 Endpoints\n- 47 Mocked Tests"]
+    M3["Milestone 3 (Target)\n- React + TypeScript SPA\n- Dexie.js (IndexedDB)\n- Local-First Vault\n- Bilingual (ID/EN)"]
     M4["Milestone 4\n- Analyst Mode (SOC L1)\n- MITRE ATT&CK Matrix\n- Raw Forensic Exporter\n- E2E Validation"]
 
     M1 --> M2 --> M3 --> M4

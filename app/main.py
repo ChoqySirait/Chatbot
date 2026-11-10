@@ -1,16 +1,24 @@
 import os
 import asyncio
+from typing import Dict, Any, List
+from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.schemas import ChatRequest, ChatResponse, HeuristicResult
+
+from app.config import settings
+from app.schemas import ChatRequest, ChatResponse, HeuristicResult, CanonicalAnalysisResult
 from app.core.security import sanitize_user_input, check_prompt_injection
 from app.core.heuristics import analyze_heuristics
 from app.services.ai_service import process_chat_with_gemini
+from app.core.logging_config import setup_logging
+
+# Inisialisasi logging terpusat dengan filter privasi
+setup_logging()
 
 app = FastAPI(
-    title="SecurAI — Consumer Protection Hub",
-    description="Platform Triage Anti-Fraud & Perlindungan Konsumen Digital",
+    title="SecurAI — Digital Trust & Incident Assistance Hub",
+    description="Platform Triage Anti-Fraud, Multi-Vector Threat Intelligence & Incident Assistance",
     version="2.5.0"
 )
 
@@ -18,11 +26,61 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+
+# Skema permintaan API v1
+class UrlAnalysisRequest(BaseModel):
+    url: str = Field(..., min_length=1, max_length=2000, description="Tautan publik yang akan diinspeksi")
+
+
+class MessageAnalysisRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=5000, description="Teks pesan untuk evaluasi rekayasa sosial")
+
+
 @app.get("/")
 def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
-# Blok endpoint utama yang menangani request secara non-blocking
+
+# Endpoint Health & Readiness (Epic 1 / Section 5.4)
+@app.get("/api/v1/health")
+def health_check() -> Dict[str, str]:
+    return {"status": "healthy", "version": "2.5.0"}
+
+
+@app.get("/api/v1/ready")
+def readiness_check() -> Dict[str, Any]:
+    return {
+        "status": "ready",
+        "providers": {
+            "gemini_api": "configured" if settings.GEMINI_API_KEY else "unconfigured_local_fallback_active",
+            "heuristics_engine": "operational",
+            "ssrf_guard": "active"
+        }
+    }
+
+
+# Endpoint Analisis Terpisah API v1 (Section 5.4)
+@app.post("/api/v1/analyze/url", response_model=CanonicalAnalysisResult)
+async def analyze_url_endpoint(req: UrlAnalysisRequest):
+    clean_url = sanitize_user_input(req.url)
+    res = await analyze_heuristics(clean_url)
+    canonical = res.get("canonical_result")
+    if not canonical:
+        raise HTTPException(status_code=500, detail="Gagal menghasilkan analisis kanonis untuk URL.")
+    return canonical
+
+
+@app.post("/api/v1/analyze/message", response_model=CanonicalAnalysisResult)
+async def analyze_message_endpoint(req: MessageAnalysisRequest):
+    clean_msg = sanitize_user_input(req.message)
+    res = await analyze_heuristics(clean_msg)
+    canonical = res.get("canonical_result")
+    if not canonical:
+        raise HTTPException(status_code=500, detail="Gagal menghasilkan analisis kanonis untuk pesan.")
+    return canonical
+
+
+# Blok endpoint utama yang menangani request secara non-blocking (Kompatibilitas Penuh)
 @app.post("/api/chat", response_model=ChatResponse)
 async def handle_chat(req: ChatRequest):
     clean_message = sanitize_user_input(req.message)
