@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { db, computeClientSha256 } from '../../db';
 import type { EvidenceItem } from '../../types/api';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 
 export const EvidenceVault: React.FC = () => {
   const { t } = useLanguage();
@@ -27,7 +27,18 @@ export const EvidenceVault: React.FC = () => {
   };
 
   useEffect(() => {
-    loadEvidence();
+    let active = true;
+    db.evidence
+      .reverse()
+      .sortBy('capturedAt')
+      .then((list) => {
+        if (active) {
+          setEvidenceList(list);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleCopy = (text: string, id: string) => {

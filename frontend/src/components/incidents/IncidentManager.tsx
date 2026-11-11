@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { db, exportIncidentCasePackage, importIncidentCasePackage } from '../../db';
 import type { IncidentCase, IncidentTimelineEvent, SeverityLevel } from '../../types/api';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 
 export const IncidentManager: React.FC = () => {
   const { t } = useLanguage();
@@ -35,33 +35,67 @@ export const IncidentManager: React.FC = () => {
   // Notes state
   const [caseNotes, setCaseNotes] = useState('');
 
+  const selectCaseWithNotes = (target: IncidentCase | null) => {
+    setSelectedCase(target);
+    setCaseNotes(target?.notes || '');
+    if (!target) {
+      setTimelineEvents([]);
+    }
+  };
+
   const loadCases = async () => {
     const list = await db.incidents.reverse().sortBy('createdAt');
     setCases(list);
-    if (list.length > 0 && !selectedCase) {
-      setSelectedCase(list[0]);
-    } else if (list.length === 0) {
-      setSelectedCase(null);
+    if (list.length === 0) {
+      selectCaseWithNotes(null);
+    } else {
+      setSelectedCase((prev) => {
+        const next = prev ? list.find((item) => item.caseId === prev.caseId) || list[0] : list[0];
+        setCaseNotes(next.notes || '');
+        return next;
+      });
     }
   };
 
   useEffect(() => {
-    loadCases();
+    let active = true;
+    db.incidents
+      .reverse()
+      .sortBy('createdAt')
+      .then((list) => {
+        if (!active) return;
+        setCases(list);
+        if (list.length > 0) {
+          setSelectedCase((prev) => {
+            const next = prev ?? list[0];
+            setCaseNotes(next.notes || '');
+            return next;
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
+  const selectedCaseId = selectedCase?.caseId;
   useEffect(() => {
-    if (selectedCase?.caseId) {
-      setCaseNotes(selectedCase.notes || '');
-      db.timeline
-        .where('incidentId')
-        .equals(selectedCase.caseId)
-        .sortBy('timestamp')
-        .then((events) => setTimelineEvents(events));
-    } else {
-      setTimelineEvents([]);
-      setCaseNotes('');
-    }
-  }, [selectedCase]);
+    if (!selectedCaseId) return;
+
+    let active = true;
+    db.timeline
+      .where('incidentId')
+      .equals(selectedCaseId)
+      .sortBy('timestamp')
+      .then((events) => {
+        if (active) {
+          setTimelineEvents(events);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedCaseId]);
 
   const handleCreateCase = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,8 +188,8 @@ export const IncidentManager: React.FC = () => {
       await db.evidence.where('incidentId').equals(selectedCase.caseId).delete();
     }
     await db.incidents.delete(id);
+    selectCaseWithNotes(null);
     await loadCases();
-    setSelectedCase(null);
   };
 
   const handleExport = async (caseId: string) => {
@@ -243,10 +277,10 @@ export const IncidentManager: React.FC = () => {
                     key={c.caseId}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelectedCase(c)}
+                    onClick={() => selectCaseWithNotes(c)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        setSelectedCase(c);
+                        selectCaseWithNotes(c);
                       }
                     }}
                     className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${

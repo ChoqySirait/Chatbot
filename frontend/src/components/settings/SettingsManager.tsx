@@ -10,7 +10,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { db, purgeAllLocalVault } from '../../db';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 
 export const SettingsManager: React.FC = () => {
   const { t } = useLanguage();
@@ -21,9 +21,11 @@ export const SettingsManager: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const loadStats = async () => {
-    const incs = await db.incidents.count();
-    const evs = await db.evidence.count();
-    const hists = await db.analysisHistory.count();
+    const [incs, evs, hists] = await Promise.all([
+      db.incidents.count(),
+      db.evidence.count(),
+      db.analysisHistory.count(),
+    ]);
     setIncidentCount(incs);
     setEvidenceCount(evs);
     setHistoryCount(hists);
@@ -47,8 +49,41 @@ export const SettingsManager: React.FC = () => {
   };
 
   useEffect(() => {
-    loadStats();
-    checkBackend();
+    let active = true;
+
+    const initSettingsView = async () => {
+      try {
+        const [incs, evs, hists] = await Promise.all([
+          db.incidents.count(),
+          db.evidence.count(),
+          db.analysisHistory.count(),
+        ]);
+        if (active) {
+          setIncidentCount(incs);
+          setEvidenceCount(evs);
+          setHistoryCount(hists);
+        }
+      } catch {
+        // IndexedDB fallback
+      }
+
+      try {
+        const res = await fetch('/api/v1/health');
+        const data = res.ok ? await res.json() : { status: 'error', error: `HTTP ${res.status}` };
+        if (active) {
+          setBackendHealth(data);
+        }
+      } catch (err) {
+        if (active) {
+          setBackendHealth({ status: 'offline', error: String(err) });
+        }
+      }
+    };
+
+    initSettingsView();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleWipeData = async () => {
@@ -66,7 +101,7 @@ export const SettingsManager: React.FC = () => {
 
     const backup = {
       app: 'SecurAI',
-      version: '1.2.0',
+      version: '2.5.0',
       exportedAt: new Date().toISOString(),
       incidents,
       timeline,
@@ -196,6 +231,24 @@ export const SettingsManager: React.FC = () => {
             <span>AI Orchestration: Gemini Structured JSON Output (ANA-02)</span>
           </div>
         </div>
+      </div>
+
+      {/* Privacy Notice & Acceptable-Use Policy Card (GOV-01 / GOV-02) */}
+      <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-6 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <span>{t.settingsTab.privacyNoticeTitle}</span>
+          </h3>
+          <span className="text-[10px] font-mono text-slate-400">{t.settingsTab.versionInfo}</span>
+        </div>
+
+        <ul className="space-y-2 text-xs text-slate-400 list-disc pl-5 leading-relaxed">
+          <li>{t.settingsTab.privacyBulletLocal}</li>
+          <li>{t.settingsTab.privacyBulletExternal}</li>
+          <li>{t.settingsTab.privacyBulletScope}</li>
+          <li>{t.settingsTab.privacyBulletDisclaimer}</li>
+        </ul>
       </div>
     </div>
   );

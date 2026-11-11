@@ -10,7 +10,7 @@ import {
   FolderGit2,
   FileCheck,
 } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 import { db } from '../../db';
 import type { IncidentCase } from '../../types/api';
 import { generateMarkdownDossier, downloadFile } from '../../utils/reportExporter';
@@ -21,7 +21,7 @@ export const ReportGenerator: React.FC = () => {
 
   // Dispute form state
   const [bankName, setBankName] = useState('Bank Central Asia (BCA)');
-  const [incidentDate, setIncidentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [incidentDate, setIncidentDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [lossAmount, setLossAmount] = useState('2.500.000');
   const [victimName, setVictimName] = useState('');
   const [victimAccount, setVictimAccount] = useState('');
@@ -33,48 +33,62 @@ export const ReportGenerator: React.FC = () => {
   const [cases, setCases] = useState<IncidentCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const [dossierMarkdown, setDossierMarkdown] = useState<string>('');
-  const [loadingDossier, setLoadingDossier] = useState(false);
+  const [loadedCaseKey, setLoadedCaseKey] = useState<string>('');
 
   // Load available cases for dossier
   useEffect(() => {
-    db.incidents.reverse().sortBy('createdAt').then((list) => {
-      setCases(list);
-      if (list.length > 0 && !selectedCaseId) {
-        setSelectedCaseId(list[0].caseId);
-      }
-    });
+    let active = true;
+    db.incidents
+      .reverse()
+      .sortBy('createdAt')
+      .then((list) => {
+        if (!active) return;
+        setCases(list);
+        if (list.length > 0) {
+          setSelectedCaseId((prev) => prev || list[0].caseId);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Generate dossier whenever selectedCaseId or language changes
   useEffect(() => {
-    if (!selectedCaseId) {
-      setDossierMarkdown('');
-      return;
-    }
+    if (!selectedCaseId) return;
+
+    let active = true;
+    const targetKey = `${selectedCaseId}:${language}`;
 
     const buildDossier = async () => {
-      setLoadingDossier(true);
-      try {
-        const incident = await db.incidents.where('caseId').equals(selectedCaseId).first();
-        if (!incident) return;
+      const incident = await db.incidents.where('caseId').equals(selectedCaseId).first();
+      if (!incident || !active) return;
 
-        const timeline = await db.timeline.where('incidentId').equals(selectedCaseId).sortBy('timestamp');
-        const evidence = await db.evidence.where('incidentId').equals(selectedCaseId).sortBy('capturedAt');
+      const [timeline, evidence] = await Promise.all([
+        db.timeline.where('incidentId').equals(selectedCaseId).sortBy('timestamp'),
+        db.evidence.where('incidentId').equals(selectedCaseId).sortBy('capturedAt'),
+      ]);
 
-        const md = await generateMarkdownDossier({
-          incident,
-          timeline,
-          evidence,
-          locale: language,
-        });
+      const md = await generateMarkdownDossier({
+        incident,
+        timeline,
+        evidence,
+        locale: language,
+      });
+      if (active) {
         setDossierMarkdown(md);
-      } finally {
-        setLoadingDossier(false);
+        setLoadedCaseKey(targetKey);
       }
     };
 
     buildDossier();
+    return () => {
+      active = false;
+    };
   }, [selectedCaseId, language]);
+
+  const activeDossierMarkdown = selectedCaseId ? dossierMarkdown : '';
+  const loadingDossier = Boolean(selectedCaseId && loadedCaseKey !== `${selectedCaseId}:${language}`);
 
   const generateLetterText = () => {
     if (language === 'en') {
@@ -394,7 +408,7 @@ __________________________
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <button
                 type="button"
-                onClick={() => handleCopy(dossierMarkdown)}
+                onClick={() => handleCopy(activeDossierMarkdown)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -404,7 +418,7 @@ __________________________
               <button
                 type="button"
                 onClick={handleDownloadMarkdown}
-                disabled={!dossierMarkdown}
+                disabled={!activeDossierMarkdown}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md disabled:opacity-50"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -427,9 +441,9 @@ __________________________
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto max-h-[700px] overflow-y-auto">
             {loadingDossier ? (
               <div className="text-center py-12 text-slate-500 text-xs">Menyusun dosir forensik...</div>
-            ) : dossierMarkdown ? (
+            ) : activeDossierMarkdown ? (
               <pre className="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed select-all">
-                {dossierMarkdown}
+                {activeDossierMarkdown}
               </pre>
             ) : (
               <div className="text-center py-12 text-slate-500 text-xs">

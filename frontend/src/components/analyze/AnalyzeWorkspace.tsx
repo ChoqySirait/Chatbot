@@ -4,33 +4,46 @@ import {
   MessageSquare,
   Globe,
   FileCode,
+  Image as ImageIcon,
   Send,
   Loader2,
   Shield,
   FolderPlus,
   Sparkles,
   Link2,
+  Upload,
+  CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import type {
   CanonicalAnalysisResult,
   ChatResponse,
   NetworkIntel,
+  StoredAnalysisRecord,
 } from '../../types/api';
-import { db, computeClientSha256 } from '../../db';
-import { useLanguage } from '../../context/LanguageContext';
-import { useMode } from '../../context/ModeContext';
+import { db, computeBufferSha256, computeClientSha256 } from '../../db';
+import { inspectLocalBinaryFile } from '../../utils/fileInspector';
+import { useLanguage } from '../../context/useLanguage';
+import { useMode } from '../../context/useMode';
 import { ConsumerView } from './ConsumerView';
 import { AnalystView } from './AnalystView';
 
 interface AnalyzeWorkspaceProps {
   onSwitchTab: (tab: 'incidents' | 'evidence' | 'reports') => void;
+  onVaultUpdated?: () => void;
 }
 
-export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab }) => {
-  const { t } = useLanguage();
+const MAX_CLIENT_IMAGE_BYTES = 3 * 1024 * 1024;
+const ALLOWED_IMAGE_MIMES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
+export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
+  onSwitchTab,
+  onVaultUpdated,
+}) => {
+  const { t, language } = useLanguage();
   const { mode } = useMode();
 
-  const [activeSubTab, setActiveSubTab] = useState<'chat' | 'url' | 'message' | 'file'>('chat');
+  const [activeSubTab, setActiveSubTab] = useState<'chat' | 'url' | 'message' | 'screenshot' | 'file'>('chat');
 
   // Input states
   const [chatInput, setChatInput] = useState('');
@@ -38,15 +51,24 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
   const [messageInput, setMessageInput] = useState('');
   const [fileHashInput, setFileHashInput] = useState('');
   const [fileName, setFileName] = useState('');
+  const [localFileResultHash, setLocalFileResultHash] = useState('');
 
-  // Execution states
+  // Screenshot analysis state (SEC-06 / AI-07)
+  const [screenshotDataUrl, setScreenshotDataUrl] = useState<string>('');
+  const [screenshotName, setScreenshotName] = useState<string>('');
+  const [screenshotLocalHash, setScreenshotLocalHash] = useState<string>('');
+  const [screenshotNote, setScreenshotNote] = useState<string>('');
+  const [externalAiConsent, setExternalAiConsent] = useState<boolean>(false);
+
+  // Execution & notification states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   // Chat message history
   const [messages, setMessages] = useState<
     { role: 'user' | 'assistant'; content: string; canonical?: CanonicalAnalysisResult }[]
-  >([
+  >(() => [
     {
       role: 'assistant',
       content:
@@ -61,6 +83,31 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [casesList, setCasesList] = useState<{ id?: number; caseId: string; title: string }[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('');
+
+  const persistHistory = async (
+    inputType: StoredAnalysisRecord['inputType'],
+    inputSummary: string,
+    canonicalResult: CanonicalAnalysisResult,
+    evidenceHash?: string,
+    networkIntel?: NetworkIntel
+  ) => {
+    try {
+      await db.analysisHistory.add({
+        analysisId: canonicalResult.analysis_id,
+        createdAt: new Date().toISOString(),
+        inputType,
+        inputSummary: inputSummary.slice(0, 120),
+        classification: canonicalResult.classification,
+        riskScore: canonicalResult.risk_score,
+        canonicalResult,
+        networkIntel,
+        evidenceHash,
+      });
+      onVaultUpdated?.();
+    } catch {
+      // Ignore IndexedDB persistence errors in restricted browsing contexts
+    }
+  };
 
   // Utility: Defang URL
   const defangUrl = (url: string): string => {
@@ -78,6 +125,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
     const userText = chatInput.trim();
     setChatInput('');
     setError(null);
+    setNotice(null);
     setMessages((prev) => [...prev, { role: 'user', content: userText }]);
     setLoading(true);
 
@@ -86,11 +134,12 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText, history: historyPayload }),
+        body: JSON.stringify({ message: userText, history: historyPayload, mode }),
       });
 
       if (!res.ok) {
-        throw new Error(`API Error (${res.status})`);
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.detail || `API Error (${res.status})`);
       }
 
       const data: ChatResponse = await res.json();
@@ -107,6 +156,13 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
         setCurrentResult(canonical);
         setCurrentTelemetry(intel);
         setCurrentEvidenceHash(evHash);
+        await persistHistory(
+          canonical.analysis_type === 'url' ? 'url' : 'message',
+          userText,
+          canonical,
+          evHash,
+          intel
+        );
       }
     } catch (err) {
       setError(`Gagal menghubungi server analisis: ${err}`);
@@ -127,25 +183,30 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
     e.preventDefault();
     if (!urlInput.trim() || loading) return;
 
+    const targetUrl = urlInput.trim();
     setLoading(true);
     setError(null);
+    setNotice(null);
     setCurrentResult(null);
 
     try {
       const res = await fetch('/api/v1/analyze/url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlInput.trim() }),
+        body: JSON.stringify({ url: targetUrl }),
       });
 
       if (!res.ok) {
-        throw new Error(`API Error (${res.status})`);
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.detail || `API Error (${res.status})`);
       }
 
       const data: CanonicalAnalysisResult = await res.json();
+      const computedHash = await computeClientSha256(targetUrl);
       setCurrentResult(data);
-      const computedHash = await computeClientSha256(urlInput.trim());
+      setCurrentTelemetry(undefined);
       setCurrentEvidenceHash(computedHash);
+      await persistHistory('url', targetUrl, data, computedHash);
     } catch (err) {
       setError(`Gagal menganalisis URL: ${err}`);
     } finally {
@@ -158,27 +219,137 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
     e.preventDefault();
     if (!messageInput.trim() || loading) return;
 
+    const text = messageInput.trim();
     setLoading(true);
     setError(null);
+    setNotice(null);
     setCurrentResult(null);
 
     try {
       const res = await fetch('/api/v1/analyze/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: messageInput.trim() }),
+        body: JSON.stringify({ message: text }),
       });
 
       if (!res.ok) {
-        throw new Error(`API Error (${res.status})`);
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.detail || `API Error (${res.status})`);
       }
 
       const data: CanonicalAnalysisResult = await res.json();
+      const computedHash = await computeClientSha256(text);
       setCurrentResult(data);
-      const computedHash = await computeClientSha256(messageInput.trim());
+      setCurrentTelemetry(undefined);
       setCurrentEvidenceHash(computedHash);
+      await persistHistory('message', text, data, computedHash);
     } catch (err) {
       setError(`Gagal menganalisis pesan: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Action: Select Screenshot Image locally (compute preview & SHA-256 without sending yet)
+  const handleSelectScreenshot = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setError(null);
+    setNotice(null);
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_MIMES.has(file.type)) {
+      setError(
+        language === 'en'
+          ? 'Unsupported image format. Please choose PNG, JPEG, or WEBP.'
+          : 'Format gambar tidak didukung. Pilih berkas PNG, JPEG, atau WEBP.'
+      );
+      return;
+    }
+
+    if (file.size > MAX_CLIENT_IMAGE_BYTES) {
+      setError(
+        language === 'en'
+          ? 'Image exceeds 3 MB maximum limit.'
+          : 'Ukuran gambar melebihi batas maksimum 3 MB.'
+      );
+      return;
+    }
+
+    const buffer = await file.arrayBuffer();
+    const localHash = await computeBufferSha256(buffer);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setScreenshotDataUrl(String(reader.result || ''));
+      setScreenshotName(file.name);
+      setScreenshotLocalHash(localHash);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Action: Analyze Screenshot via /api/v1/analyze/image with opt-in consent
+  const handleAnalyzeScreenshot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!screenshotDataUrl || loading) return;
+
+    setLoading(true);
+    setError(null);
+    setNotice(null);
+    setCurrentResult(null);
+
+    try {
+      const res = await fetch('/api/v1/analyze/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: screenshotDataUrl,
+          context_note: screenshotNote.trim(),
+          mode,
+          external_ai_consent: externalAiConsent,
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.detail || `API Error (${res.status})`);
+      }
+
+      const data: CanonicalAnalysisResult = await res.json();
+      const sha = String(data.provider_status?.sha256_hash || screenshotLocalHash);
+      setCurrentResult(data);
+      setCurrentTelemetry(undefined);
+      setCurrentEvidenceHash(sha);
+      await persistHistory('screenshot', screenshotName || 'Screenshot upload', data, sha);
+    } catch (err) {
+      setError(`Gagal menganalisis tangkapan layar: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Action: Local Binary File Inspection (100% browser Web Crypto SHA-256 + magic bytes)
+  const handleInspectBinaryFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const outcome = await inspectLocalBinaryFile(file);
+      setFileName(file.name);
+      setLocalFileResultHash(outcome.sha256Hash);
+      setFileHashInput(outcome.evidencePreview);
+      setCurrentResult(outcome.canonicalResult);
+      setCurrentTelemetry(undefined);
+      setCurrentEvidenceHash(outcome.sha256Hash);
+      await persistHistory('file', `${file.name} (${outcome.detectedMagicType})`, outcome.canonicalResult, outcome.sha256Hash);
+      setNotice(
+        language === 'en'
+          ? `Local inspection complete: ${file.name} (${outcome.detectedMagicType})`
+          : `Inspeksi lokal selesai: ${file.name} (${outcome.detectedMagicType})`
+      );
+    } catch (err) {
+      setError(`Gagal memeriksa berkas lokal: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -191,11 +362,19 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
     const content = JSON.stringify(currentResult, null, 2);
     const hash = currentEvidenceHash || (await computeClientSha256(content));
     const evidenceId = `EVD-${Date.now().toString(36).toUpperCase()}`;
+    const artifactType =
+      currentResult.analysis_type === 'url'
+        ? 'url'
+        : currentResult.analysis_type === 'image'
+        ? 'screenshot'
+        : 'manifest';
 
     await db.evidence.add({
       evidenceId,
-      name: `Analysis Evidence (${currentResult.analysis_type.toUpperCase()})`,
-      artifactType: currentResult.analysis_type === 'url' ? 'url' : 'manifest',
+      name: fileName
+        ? `Evidence: ${fileName}`
+        : `Analysis Evidence (${currentResult.analysis_type.toUpperCase()})`,
+      artifactType,
       contentPreview: content,
       sha256Hash: hash,
       sizeBytes: new TextEncoder().encode(content).length,
@@ -203,7 +382,8 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
       capturedAt: new Date().toISOString(),
     });
 
-    alert(`Artefak bukti tersimpan di Brankas dengan ID: ${evidenceId}`);
+    onVaultUpdated?.();
+    setNotice(`Artefak bukti tersimpan di Brankas dengan ID: ${evidenceId}`);
   };
 
   // Action: Open Case Link Modal
@@ -228,15 +408,16 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
       severity: currentResult.risk_score >= 60 ? 'high' : 'medium',
     });
 
+    onVaultUpdated?.();
     setShowCaseModal(false);
-    alert(`Temuan berhasil dilampirkan ke kasus ${selectedCaseId}`);
+    setNotice(`Temuan berhasil dilampirkan ke kasus ${selectedCaseId}`);
   };
 
   return (
     <div className="space-y-6">
       {/* Sub Tabs: Chat Triage vs Direct Scanners */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
-        <div className="flex space-x-1 sm:space-x-2 bg-slate-900/60 p-1 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap gap-1 sm:gap-1.5 bg-slate-900/60 p-1 rounded-xl border border-slate-800">
           <button
             type="button"
             onClick={() => setActiveSubTab('chat')}
@@ -273,7 +454,20 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Deteksi Pesan Phishing</span>
+            <span>Deteksi Pesan</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('screenshot')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeSubTab === 'screenshot'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>{language === 'en' ? 'Screenshot' : 'Tangkapan Layar'}</span>
           </button>
 
           <button
@@ -286,7 +480,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
-            <span>Hash Artefak & File</span>
+            <span>{language === 'en' ? 'File & SHA-256' : 'Berkas & SHA-256'}</span>
           </button>
         </div>
 
@@ -305,11 +499,25 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
         </div>
       </div>
 
-      {/* Error alert if any */}
+      {/* Status alerts */}
       {error && (
         <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-300 text-xs flex items-center justify-between">
           <span>{error}</span>
-          <button type="button" onClick={() => setError(null)} className="text-slate-400 hover:text-white">✕</button>
+          <button type="button" onClick={() => setError(null)} className="text-slate-400 hover:text-white">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {notice && (
+        <div className="p-3.5 rounded-xl bg-emerald-950/50 border border-emerald-800/80 text-emerald-300 text-xs flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{notice}</span>
+          </span>
+          <button type="button" onClick={() => setNotice(null)} className="text-slate-400 hover:text-white">
+            ✕
+          </button>
         </div>
       )}
 
@@ -326,11 +534,10 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
                   <span>Interactive Incident Triage Assistant</span>
                 </span>
                 <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800/60">
-                  Dual-Engine
+                  {mode === 'analyst' ? 'SOC Analyst' : 'Consumer'}
                 </span>
               </div>
 
-              {/* Message scroll container */}
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
                 {messages.map((m, idx) => (
                   <div
@@ -346,12 +553,9 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
                     >
                       <p className="whitespace-pre-wrap">{m.content}</p>
 
-                      {/* Attached risk pill if assistant reply has canonical data */}
                       {m.canonical && (
                         <div className="mt-2 pt-2 border-t border-slate-700/60 flex items-center justify-between gap-2 text-[10px] font-mono">
-                          <span className="text-cyan-300">
-                            Risk: {m.canonical.risk_score}/100
-                          </span>
+                          <span className="text-cyan-300">Risk: {m.canonical.risk_score}/100</span>
                           <button
                             type="button"
                             onClick={() => setCurrentResult(m.canonical || null)}
@@ -372,7 +576,6 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
                 )}
               </div>
 
-              {/* Input box */}
               <form onSubmit={handleSendChat} className="p-3 border-t border-slate-800 bg-slate-950/60 flex gap-2">
                 <input
                   type="text"
@@ -486,20 +689,135 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
             </div>
           )}
 
-          {/* SubTab 4: File Hash & Seal Generator */}
+          {/* SubTab 4: Screenshot Verification & Consent-Gated AI Vision (UX-06 / SEC-06 / AI-07) */}
+          {activeSubTab === 'screenshot' && (
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div>
+                <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-cyan-400" />
+                  <span>{language === 'en' ? 'Screenshot Verification & Triage' : 'Verifikasi Tangkapan Layar & AI'}</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {language === 'en'
+                    ? 'Validates PNG/JPEG/WEBP magic bytes, seals SHA-256 locally, and optionally runs visual AI inspection.'
+                    : 'Memvalidasi magic bytes PNG/JPEG/WEBP, menyegel SHA-256, dan menganalisis visual opsional via AI.'}
+                </p>
+              </div>
+
+              <form onSubmit={handleAnalyzeScreenshot} className="space-y-3">
+                <label className="block border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-4 text-center cursor-pointer bg-slate-950/60 transition-colors">
+                  <Upload className="w-6 h-6 text-cyan-400 mx-auto mb-1.5" />
+                  <span className="block text-xs font-semibold text-slate-200">
+                    {screenshotName || (language === 'en' ? 'Choose PNG / JPEG / WEBP (Max 3 MB)' : 'Pilih PNG / JPEG / WEBP (Maks 3 MB)')}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleSelectScreenshot}
+                    className="hidden"
+                  />
+                </label>
+
+                {screenshotDataUrl && (
+                  <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-3 space-y-2">
+                    <img
+                      src={screenshotDataUrl}
+                      alt="Screenshot preview"
+                      className="max-h-44 mx-auto rounded-lg border border-slate-800 object-contain"
+                    />
+                    <p className="text-[10px] font-mono text-emerald-400 break-all">
+                      SHA-256: {screenshotLocalHash}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-slate-400 text-xs mb-1 font-medium">
+                    {language === 'en' ? 'Context Note (optional)' : 'Catatan Konteks (opsional)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={screenshotNote}
+                    onChange={(e) => setScreenshotNote(e.target.value)}
+                    placeholder={language === 'en' ? 'e.g. Received via WhatsApp claiming bank promo' : 'misal: Diterima via WhatsApp mengatasnamakan bank'}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+
+                {/* Explicit External AI Consent Gate (AI-07) */}
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-800/50 cursor-pointer text-xs text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={externalAiConsent}
+                    onChange={(e) => setExternalAiConsent(e.target.checked)}
+                    className="mt-0.5 rounded border-slate-600 bg-slate-900 text-cyan-500"
+                  />
+                  <span>
+                    <strong className="text-amber-300 block mb-0.5">
+                      {language === 'en' ? 'External AI Vision Consent (Optional)' : 'Persetujuan Pengiriman AI Eksternal (Opsional)'}
+                    </strong>
+                    {language === 'en'
+                      ? 'Allow sending this image to Google Gemini Vision API for visual phishing evaluation. When unchecked, only container security checks and SHA-256 sealing run.'
+                      : 'Izinkan pengiriman gambar ini ke Google Gemini Vision API untuk evaluasi phishing visual. Jika tidak dicentang, hanya validasi keamanan lokal & segel SHA-256 yang berjalan.'}
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={!screenshotDataUrl || loading}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>{t.analyzeTab.btnAnalyzing}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-4 h-4" />
+                      <span>{language === 'en' ? 'Verify & Inspect Screenshot' : 'Verifikasi & Analisis Tangkapan Layar'}</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* SubTab 5: Local Binary File Inspection & SHA-256 (ANA-10) */}
           {activeSubTab === 'file' && (
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 space-y-4">
               <div>
                 <h3 className="font-bold text-white text-sm flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-cyan-400" />
-                  <span>Perhitungan Hash Kriptografis SHA-256</span>
+                  <span>{language === 'en' ? 'Local Binary Inspector & SHA-256' : 'Pemeriksa Berkas Lokal & Hash SHA-256'}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Hitung nilai hash SHA-256 dari teks, artefak, atau file lokal untuk integritas rantai bukti.
+                  {language === 'en'
+                    ? 'Computes real SHA-256 & inspects binary magic bytes 100% locally in your browser without uploading files.'
+                    : 'Menghitung SHA-256 & memeriksa header biner 100% lokal di browser tanpa mengunggah berkas ke server.'}
                 </p>
               </div>
 
-              <div className="space-y-3">
+              <label className="block border-2 border-dashed border-slate-700 hover:border-cyan-500/60 rounded-xl p-4 text-center cursor-pointer bg-slate-950/60 transition-colors">
+                <Lock className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
+                <span className="block text-xs font-semibold text-slate-200">
+                  {language === 'en'
+                    ? 'Select any local file (.apk, .pdf, .exe, .zip, etc.)'
+                    : 'Pilih berkas lokal (.apk, .pdf, .exe, .zip, dll.)'}
+                </span>
+                <span className="block text-[10px] text-slate-500 mt-0.5">
+                  Zero upload • Web Crypto API SHA-256 + Magic-Byte Masquerade Check
+                </span>
+                <input type="file" onChange={handleInspectBinaryFile} className="hidden" />
+              </label>
+
+              {localFileResultHash && (
+                <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] font-mono text-emerald-400 break-all">
+                  SHA-256 ({fileName}): {localFileResultHash}
+                </div>
+              )}
+
+              <div className="space-y-3 pt-2 border-t border-slate-800">
                 <div>
                   <label className="block text-slate-400 text-xs mb-1 font-medium">Nama Artefak</label>
                   <input
@@ -512,12 +830,12 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1 font-medium">Isi / Metadata Artefak</label>
+                  <label className="block text-slate-400 text-xs mb-1 font-medium">Isi / Metadata Artefak (Teks)</label>
                   <textarea
                     rows={4}
                     value={fileHashInput}
                     onChange={(e) => setFileHashInput(e.target.value)}
-                    placeholder="Tempel konten atau masukkan string representasi..."
+                    placeholder="Tempel konten teks atau lihat ringkasan metadata berkas..."
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -528,11 +846,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
                     if (!fileHashInput) return;
                     const hash = await computeClientSha256(fileHashInput);
                     setCurrentEvidenceHash(hash);
-                    alert(`Hash SHA-256 Dihasilkan: ${hash}`);
+                    setNotice(`Hash SHA-256 teks dihitung: ${hash}`);
                   }}
                   className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
                 >
-                  Hitung SHA-256
+                  Hitung SHA-256 Teks
                 </button>
               </div>
             </div>
@@ -562,7 +880,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({ onSwitchTab 
               <Shield className="w-12 h-12 stroke-[1.2] mb-3 text-slate-600" />
               <p className="text-sm font-medium text-slate-400">Hasil Analisis Siap Ditampilkan</p>
               <p className="text-xs text-slate-600 mt-1 max-w-sm">
-                Kirim pesan pada chat triage atau lakukan inspeksi URL/Pesan di kolom kiri untuk melihat hasil forensik terstruktur.
+                Kirim pesan pada chat triage atau lakukan inspeksi URL, Pesan, Tangkapan Layar, maupun Berkas Lokal di kolom kiri.
               </p>
             </div>
           )}

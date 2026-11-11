@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, User, Terminal, Lock, Activity } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
-import { useMode } from '../../context/ModeContext';
+import { useLanguage } from '../../context/useLanguage';
+import { useMode } from '../../context/useMode';
 
 export const Header: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
         const res = await fetch('/api/v1/health');
         if (res.ok) {
           const data = await res.json();
-          setBackendOnline(data.status === 'ok');
+          setBackendOnline(data.status === 'healthy' || data.status === 'ok');
         } else {
           setBackendOnline(false);
         }
@@ -41,7 +41,7 @@ export const Header: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg text-white tracking-tight">Secur<span className="text-cyan-400">AI</span></span>
                 <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60">
-                  v1.2
+                  v2.5
                 </span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">

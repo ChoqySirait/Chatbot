@@ -1,8 +1,25 @@
 import React from 'react';
-import { Search, FolderGit2, ShieldCheck, FileCheck2, Settings2, Terminal, GraduationCap } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
+import {
+  LayoutDashboard,
+  Search,
+  FolderGit2,
+  ShieldCheck,
+  FileCheck2,
+  Settings2,
+  Terminal,
+  GraduationCap,
+} from 'lucide-react';
+import { useLanguage } from '../../context/useLanguage';
 
-export type TabType = 'analyze' | 'threat-intel' | 'incidents' | 'evidence' | 'reports' | 'learn' | 'settings';
+export type TabType =
+  | 'overview'
+  | 'analyze'
+  | 'threat-intel'
+  | 'incidents'
+  | 'evidence'
+  | 'reports'
+  | 'learn'
+  | 'settings';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -20,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { t } = useLanguage();
 
   const navItems: { id: TabType; label: string; icon: React.FC<{ className?: string }>; count?: number }[] = [
+    { id: 'overview', label: t.nav.overview, icon: LayoutDashboard },
     { id: 'analyze', label: t.nav.analyze, icon: Search },
     { id: 'threat-intel', label: t.nav.threatIntel, icon: Terminal },
     { id: 'incidents', label: t.nav.incidents, icon: FolderGit2, count: incidentsCount },
@@ -32,7 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav className="border-b border-slate-800 bg-slate-950/60 sticky top-16 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-1 sm:space-x-4 overflow-x-auto py-2 no-scrollbar">
+        <div className="flex space-x-1 sm:space-x-3 overflow-x-auto py-2 no-scrollbar">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -41,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'

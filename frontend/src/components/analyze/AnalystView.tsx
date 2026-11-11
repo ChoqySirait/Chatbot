@@ -11,7 +11,7 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import type { CanonicalAnalysisResult, NetworkIntel } from '../../types/api';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 
 interface AnalystViewProps {
   result: CanonicalAnalysisResult;

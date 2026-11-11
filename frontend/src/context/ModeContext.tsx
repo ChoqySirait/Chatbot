@@ -1,14 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-
-export type UserMode = 'consumer' | 'analyst';
-
-interface ModeContextType {
-  mode: UserMode;
-  setMode: (mode: UserMode) => void;
-  toggleMode: () => void;
-}
-
-const ModeContext = createContext<ModeContextType | undefined>(undefined);
+import React, { useState } from 'react';
+import { ModeContext, type UserMode } from './ModeContextStore';
 
 export const ModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mode, setModeState] = useState<UserMode>(() => {
@@ -30,12 +21,4 @@ export const ModeProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </ModeContext.Provider>
   );
-};
-
-export const useMode = (): ModeContextType => {
-  const context = useContext(ModeContext);
-  if (!context) {
-    throw new Error('useMode must be used within a ModeProvider');
-  }
-  return context;
 };

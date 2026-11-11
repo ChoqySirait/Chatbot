@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   RotateCcw,
 } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 
 interface QuizQuestion {
   id: number;

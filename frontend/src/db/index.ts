@@ -27,13 +27,18 @@ export class SecurAIDatabase extends Dexie {
 
 export const db = new SecurAIDatabase();
 
-// Client-side Web Crypto API SHA-256 calculation
+// Client-side Web Crypto API SHA-256 calculation for binary buffers
+export async function computeBufferSha256(buffer: ArrayBuffer): Promise<string> {
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Client-side Web Crypto API SHA-256 calculation for strings
 export async function computeClientSha256(text: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return computeBufferSha256(data.buffer);
 }
 
 // Canonical JSON serialization for deterministic manifest verification

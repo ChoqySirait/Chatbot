@@ -9,7 +9,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import type { CanonicalAnalysisResult, ClassificationType } from '../../types/api';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/useLanguage';
 
 interface ConsumerViewProps {
   result: CanonicalAnalysisResult;

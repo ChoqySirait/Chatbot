@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import { Navbar, type TabType } from './components/layout/Navbar';
-import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import { ModeProvider, useMode } from './context/ModeContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { ModeProvider } from './context/ModeContext';
+import { useLanguage } from './context/useLanguage';
+import { useMode } from './context/useMode';
+import { OverviewDashboard } from './components/overview/OverviewDashboard';
 import { AnalyzeWorkspace } from './components/analyze/AnalyzeWorkspace';
 import { ThreatIntelExplorer } from './components/threat-intel/ThreatIntelExplorer';
 import { IncidentManager } from './components/incidents/IncidentManager';
@@ -14,26 +17,40 @@ import { db } from './db';
 import { Terminal, User, Lock } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('analyze');
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [incidentsCount, setIncidentsCount] = useState(0);
   const [evidenceCount, setEvidenceCount] = useState(0);
+  const [refreshSignal, setRefreshSignal] = useState(0);
   const { t } = useLanguage();
   const { mode } = useMode();
 
-  const refreshCounts = async () => {
-    try {
-      const incCount = await db.incidents.count();
-      const evCount = await db.evidence.count();
-      setIncidentsCount(incCount);
-      setEvidenceCount(evCount);
-    } catch {
-      // IndexedDB fallback
-    }
-  };
-
   useEffect(() => {
-    refreshCounts();
-  }, [activeTab]);
+    let active = true;
+
+    const syncCounts = async () => {
+      try {
+        const [incCount, evCount] = await Promise.all([
+          db.incidents.count(),
+          db.evidence.count(),
+        ]);
+        if (active) {
+          setIncidentsCount(incCount);
+          setEvidenceCount(evCount);
+        }
+      } catch {
+        // IndexedDB fallback
+      }
+    };
+
+    syncCounts();
+    return () => {
+      active = false;
+    };
+  }, [activeTab, refreshSignal]);
+
+  const handleVaultUpdated = () => {
+    setRefreshSignal((prev) => prev + 1);
+  };
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans">
@@ -84,8 +101,14 @@ const AppContent: React.FC = () => {
         </div>
 
         {/* Tab Content Router */}
+        {activeTab === 'overview' && (
+          <OverviewDashboard onNavigate={(tab) => setActiveTab(tab)} />
+        )}
         {activeTab === 'analyze' && (
-          <AnalyzeWorkspace onSwitchTab={(tab) => setActiveTab(tab)} />
+          <AnalyzeWorkspace
+            onSwitchTab={(tab) => setActiveTab(tab)}
+            onVaultUpdated={handleVaultUpdated}
+          />
         )}
         {activeTab === 'threat-intel' && <ThreatIntelExplorer />}
         {activeTab === 'incidents' && <IncidentManager />}
