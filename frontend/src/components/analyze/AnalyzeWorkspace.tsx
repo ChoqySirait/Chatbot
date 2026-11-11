@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Search,
   MessageSquare,
@@ -83,6 +83,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [casesList, setCasesList] = useState<{ id?: number; caseId: string; title: string }[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('');
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages.length, loading]);
 
   const persistHistory = async (
     inputType: StoredAnalysisRecord['inputType'],
@@ -574,6 +579,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                     <span>Menganalisis indikator keamanan...</span>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
               <form onSubmit={handleSendChat} className="p-3 border-t border-slate-800 bg-slate-950/60 flex gap-2">

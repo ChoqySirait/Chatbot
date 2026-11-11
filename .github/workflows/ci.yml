@@ -31,7 +31,7 @@ jobs:
           pytest -v
 
   frontend-build:
-    name: Frontend Production Build (React + Vite + TS)
+    name: Frontend Lint, Typecheck & Build (React + Vite + TS)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -48,6 +48,16 @@ jobs:
         run: |
           cd frontend
           npm ci
+
+      - name: Lint Frontend (oxlint)
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Typecheck Frontend (tsc)
+        run: |
+          cd frontend
+          npx tsc -b --noEmit
 
       - name: Build Frontend Application
         run: |

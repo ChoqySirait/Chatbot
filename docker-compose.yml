@@ -1,0 +1,18 @@
+services:
+  securai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: securai-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: production
+      ALLOWED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+      RATE_LIMIT_PER_MINUTE: 30
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp

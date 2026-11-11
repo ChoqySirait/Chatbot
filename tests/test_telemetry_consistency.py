@@ -86,6 +86,7 @@ def test_non_url_innocent_message_has_no_telemetry():
         data = resp.json()
 
         assert data["heuristics"] is None
+        assert data["canonical_result"] is None
         assert data["threat_category"] == "Informasi Umum"
 
 

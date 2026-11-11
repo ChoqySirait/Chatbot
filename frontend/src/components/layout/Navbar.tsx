@@ -48,9 +48,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <nav className="border-b border-slate-800 bg-slate-950/60 sticky top-16 z-40">
+    <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-16 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-1 sm:space-x-3 overflow-x-auto py-2 no-scrollbar">
+        <div className="flex flex-nowrap lg:flex-wrap items-center gap-1 sm:gap-1.5 overflow-x-auto py-2 no-scrollbar">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'

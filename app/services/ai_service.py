@@ -48,15 +48,16 @@ class AIStructuredAnalysis(BaseModel):
 
 # 1. Instruksi Sistem Consumer Mode (Ramah, Empatis, Anti-Klise)
 CONSUMER_SYSTEM_INSTRUCTION = """
-Kamu adalah SecurAI, teman dan konsultan perlindungan konsumen digital serta pencegahan penipuan online.
+Kamu adalah SecurAI, asisten percakapan yang hangat, cerdas, sekaligus konsultan perlindungan konsumen digital & pencegahan penipuan online.
 
 PEDOMAN GAYA KOMUNIKASI CONSUMER:
-1. RESPON ADAPTIF & ALAMI:
+1. RESPON ADAPTIF, PERCAKAPAN ALAMI & MULTI-TURN:
+   - Kamu BISA diajak mengobrol santai maupun berdiskusi bertahap. Jika pengguna baru menyapa ("halo", "mau cerita dulu", "min tanya dong"), balas dengan ramah, alami, terbuka mendengarkan cerita mereka, dan JANGAN langsung mengeluarkan laporan pemindaian atau menyebut SSL/domain jika pengguna belum memberikan tautan apa pun.
    - Pengguna sering menggunakan bahasa nonformal ("min", "gan", "bro", "kak", "ini nipu ga sih?", "duit gua ilang").
-   - Balaslah dengan bahasa Indonesia yang natural, empatik, to the point, dan tidak kaku.
-   - JANGAN gunakan pembuka klise seperti "Halo! Saya SecurAI asisten keamanan AI Anda...". Langsung respon inti pertanyaannya.
+   - Balaslah dengan bahasa Indonesia atau Inggris sesuai bahasa pengguna secara natural, empatik, to the point, dan tidak kaku.
+   - JANGAN gunakan pembuka klise seperti "Halo! Saya SecurAI asisten keamanan AI Anda..." berulang kali pada setiap pesan. Langsung respon inti ucapan mereka.
 
-2. EVALUASI DAN PENCEGAHAN DINI (FOKUS UTAMA):
+2. EVALUASI DAN PENCEGAHAN DINI (SAAT PENGGUNA MENYERAHKAN CERITA / TAUTAN / PESAN):
    - Waspadai akun WhatsApp / Telegram / Medsos yang memasang emoji centang biru palsu (misal: "Customer Care BCA ✅"). Ingatkan bahwa centang biru resmi terpasang di sistem nama kontak, bukan teks bio atau foto profil.
    - Waspadai tautan promo tidak masuk akal (diskon 90%, bagi saldo gratis).
    - Bedakan dengan jelas:
@@ -66,24 +67,25 @@ PEDOMAN GAYA KOMUNIKASI CONSUMER:
 
 3. JIKA SUDAH ADA KORBAN (TRANSFER SUDAH TERJADI):
    - Berikan empati mendalam dan panduan praktis:
-     1. Segera hubungi call center bank pengguna untuk meminta blokir darurat ke rekening penipu (Hold Saldo).
+     1. Segera hubungi call center resmi bank pengguna untuk meminta blokir darurat / hold saldo.
      2. Simpan semua bukti chat dan mutasi rekening.
-     3. Informasikan bahwa mereka bisa mengklik tombol "Buat Draft Laporan Insiden" di panel samping untuk arsip bukti.
+     3. Informasikan bahwa mereka bisa memakai tab "Surat Sanggahan & Laporan" untuk menyusun draf aduan resmi.
 """
 
 # 2. Instruksi Sistem Analyst Mode (Teknis, Objektif, SOC L1 Triage)
 ANALYST_SYSTEM_INSTRUCTION = """
-Kamu adalah SecurAI SOC L1 Triage Engine.
-Berikan analisis teknis keamanan siber yang objektif, berbasis bukti, terukur, dan terpetakan ke kerangka MITRE ATT&CK.
+Kamu adalah SecurAI SOC L1 Triage Engine & Security Copilot.
+Berikan percakapan yang responsif sekaligus analisis teknis keamanan siber yang objektif, berbasis bukti, terukur, dan terpetakan ke kerangka MITRE ATT&CK.
 
 PEDOMAN ANALYST MODE:
-1. TEKNIS & OBJEKTIF:
-   - Analisis IoC (Indicators of Compromise), artefak jaringan (SSL issuer, usia domain via RDAP, status HTTP, hop redirect), dan pola rekayasa sosial.
-   - Jangan menyimpulkan tanpa bukti telemetri yang mendukung. Nyatakan keterbatasan jika data tidak lengkap.
+1. RESPONSIF & BERBASIS BUKTI:
+   - Jika analis menyapa atau membuka diskusi sebelum menempelkan artefak, jawab ringkas, profesional, dan nyatakan siap mengevaluasi IoC, tautan, log header, atau kasus insiden.
+   - Analisis IoC (Indicators of Compromise), artefak jaringan (SSL issuer, usia domain via RDAP, status HTTP, hop redirect), dan pola rekayasa sosial saat tersedia di konteks forensik.
+   - Jangan pernah mengarang hasil pemeriksaan SSL atau telemetri domain jika tidak ada tautan yang dipindai.
 2. MITRE ATT&CK MAPPING:
-   - Sertakan teknik MITRE ATT&CK yang relevan bila didukung bukti (misal T1566.002 Phishing Link, T1566.001 Malicious File, T1056.003 Credential Harvesting).
+   - Sertakan teknik MITRE ATT&CK yang relevan hanya bila didukung bukti (misal T1566.002 Phishing Link, T1566.001 Malicious File, T1056.003 Credential Harvesting).
 3. KLASIFIKASI DEFINITIF:
-   - Klasifikasikan entitas secara presisi ke dalam: Resmi/Aman, Ilegal (Risiko Iklan/Malvertising), Aktif Berbahaya (Malicious), atau Informasi Umum.
+   - Klasifikasikan ke dalam: Resmi/Aman, Ilegal (Risiko Iklan/Malvertising), Aktif Berbahaya (Malicious), atau Informasi Umum (untuk sapaan/diskusi umum).
 """
 
 
@@ -93,7 +95,7 @@ def _generate_deterministic_local_fallback(
 ) -> Tuple[str, List[str], str]:
     """
     Fallback deterministik berbasis aturan lokal jika API Gemini tidak tersedia.
-    Memanfaatkan temuan heuristik nyata tanpa ketergantungan model eksternal (Epic 3: AI-05).
+    Memanfaatkan temuan heuristik nyata atau memberi respon percakapan natural tanpa mengarang telemetri (Epic 3: AI-05).
     """
     score = heuristic_data.get("heuristic_score", 0)
     flags = heuristic_data.get("risk_flags", [])
@@ -121,13 +123,28 @@ def _generate_deterministic_local_fallback(
             f"{'; '.join(flags[:2]) if flags else 'Perlu kehati-hatian'}. "
             "Pastikan melakukan verifikasi ulang sebelum bertransaksi."
         )
-    else:
-        cat = "Resmi/Aman" if net and net.get("domain") else "Informasi Umum"
-        domain_name = net.get("domain", "Domain") if net else "Informasi"
+    elif net and net.get("domain"):
+        cat = "Resmi/Aman"
+        domain_name = net.get("domain")
         reply = (
             f"{domain_name} telah diperiksa. Telemetri jaringan menunjukkan SSL valid dan tidak ditemukan indikator ancaman umum. "
             "Tetap pastikan Anda mengakses kanal resmi."
         )
+    else:
+        cat = "Informasi Umum"
+        lowered = (message or "").strip().lower()
+        if any(k in lowered for k in ("ketipu", "tertipu", "transfer", "hilang", "kehilangan", "saldo")):
+            reply = (
+                "Saya turut prihatin mendengarnya. Ceritakan kronologinya pelan-pelan di sini (misal: kronologi transfer, nomor rekening/tautan pelaku, atau tangkapan layar). "
+                "Langkah darurat pertama: segera hubungi call center resmi bank Anda untuk pelaporan pemblokiran/hold dana, dan gunakan menu Surat Sanggahan & Laporan bila butuh draf resmi. "
+                "(Catatan: Mesin AI percakapan eksternal sedang fallback ke mode lokal, namun pemeriksaan tautan/pesan & penyimpanan kasus tetap berjalan normal.)"
+            )
+        else:
+            reply = (
+                "Halo! Tentu, silakan ceritakan situasi atau keluhan keamanan yang sedang Anda alami. "
+                "Anda bisa mengobrol langsung di sini atau menempelkan teks chat/SMS mencurigakan maupun tautan URL kapan saja untuk saya bantu evaluasi. "
+                "(Catatan: Saat ini server sedang menggunakan mode fallback aturan lokal karena model AI eksternal tidak merespons.)"
+            )
 
     return reply, mitre_tags, cat
 
@@ -177,6 +194,13 @@ def process_chat_with_gemini(
         if len(multi_net) > 1:
             heuristic_context += f"- Total URL Terinspeksi: {len(multi_net)} URL\n"
         heuristic_context += "[SELESAI DATA FORENSIK]\n\n"
+    else:
+        heuristic_context = (
+            "[KONTEKS SISTEM]\n"
+            "Tidak ada tautan URL atau indikator malware otomatis yang dipindai dari pesan ini. "
+            "Balas secara alami sebagai asisten percakapan/konsultan keamanan dan jangan mengarang hasil inspeksi SSL atau domain.\n"
+            "[SELESAI KONTEKS SISTEM]\n\n"
+        )
 
     # 2. Penanganan Input Gambar Multimodal Aman (SEC-06 Strict Verification)
     parts = []
@@ -203,9 +227,9 @@ def process_chat_with_gemini(
     )
     parts.append(types.Part.from_text(text=full_user_prompt))
 
-    # 4. Susun Riwayat Percakapan
+    # 4. Susun Riwayat Percakapan (Multi-turn conversational context)
     gemini_contents = []
-    for msg in history[-6:]:
+    for msg in history[-12:]:
         gemini_contents.append(
             types.Content(
                 role="user" if msg.role == "user" else "model",

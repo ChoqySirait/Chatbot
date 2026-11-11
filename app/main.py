@@ -63,6 +63,17 @@ def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 
+@app.get("/favicon.svg")
+def serve_favicon():
+    dist_fav = os.path.join(DIST_DIR, "favicon.svg")
+    if os.path.exists(dist_fav):
+        return FileResponse(dist_fav, media_type="image/svg+xml")
+    static_fav = os.path.join(STATIC_DIR, "favicon.svg")
+    if os.path.exists(static_fav):
+        return FileResponse(static_fav, media_type="image/svg+xml")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+
 # Endpoint Health & Readiness (Epic 1 / Section 5.4)
 @app.get("/api/v1/health")
 def health_check() -> Dict[str, str]:
@@ -167,5 +178,5 @@ async def handle_chat(req: ChatRequest):
         heuristics=heuristic_result,
         mitre_tags=mitre_tags,
         threat_category=category,
-        canonical_result=heuristics_dict.get("canonical_result")
+        canonical_result=heuristics_dict.get("canonical_result") if heuristic_result is not None else None
     )

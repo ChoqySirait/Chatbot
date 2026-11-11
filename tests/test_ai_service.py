@@ -107,3 +107,19 @@ def test_gemini_api_failure_activates_fallback_gracefully():
         assert reply is not None
         assert "telemetri lokal" in reply
         assert cat in ("Ilegal (Risiko Iklan/Malvertising)", "Informasi Umum", "Aktif Berbahaya (Malicious)")
+
+
+def test_deterministic_fallback_conversational_without_url():
+    heuristic_data = {
+        "heuristic_score": 0,
+        "risk_flags": [],
+        "network_intel": None,
+    }
+    reply, mitre_tags, cat = _generate_deterministic_local_fallback(
+        "mari ngobrol dahulu, saya mau cerita", heuristic_data
+    )
+    assert cat == "Informasi Umum"
+    assert mitre_tags == []
+    assert "SSL valid" not in reply
+    assert "ceritakan" in reply.lower()
+
