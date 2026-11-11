@@ -18,7 +18,7 @@ flowchart TB
 
     subgraph Backend["FastAPI Security & Analysis Gateway"]
         MW["Middleware: SecurityHeaders + RateLimit + 5 MB Payload Guard + CORS"]
-        Routes["API Routes: /api/v1/health, /ready, /analyze/url, /analyze/message, /analyze/image, /api/chat"]
+        Routes["API Routes: /api/v1/health, /ready, /analyze/{url,message,image}, /api/v1/chat, /api/chat"]
         SSRF["SSRF Guard & Pinned DNS/TLS Socket (SEC-01, SEC-03)"]
         PSL["Offline PSL Brand Impersonation Engine (SEC-02)"]
         ImgSec["Pillow Image Security Guard & Magic-Byte Sniffing (SEC-06)"]
@@ -45,7 +45,7 @@ flowchart TB
 ## 2. Core Design Decisions & Boundaries
 
 ### Frontend (Local-First SPA)
-- **Framework:** React 19, TypeScript (`tsc -b`), Vite (`vite build` outputs to `app/static/dist/`), Tailwind CSS v4, Lucide icons, and `oxlint`.
+- **Framework:** React 19, TypeScript (`tsc -b`), Vite (`vite build` outputs to `app/static/dist/`), Tailwind CSS v4, Lucide icons, `oxlint`, and **Vitest** (`fake-indexeddb`) unit tests in single minimalist Dark Slate UI (`id`/`en` bilingual localization).
 - **Dual User Mode (`ModeContext`):**
   - `consumer`: Plain-language explanations, safety action steps, bank dispute workflows, interactive phishing quiz.
   - `analyst`: Full technical network telemetry (resolved IP, redirect hops, TLS certificate issuer/expiry, RDAP age/registrar, rule findings, MITRE ATT&CK tags, canonical JSON export).

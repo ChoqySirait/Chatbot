@@ -182,7 +182,11 @@ export const IncidentManager: React.FC = () => {
   };
 
   const handleDeleteCase = async (id: number) => {
-    if (!confirm('Hapus kasus ini dari penyimpanan lokal?')) return;
+    const msg =
+      language === 'en'
+        ? 'Delete this case and its timeline/evidence from local storage?'
+        : 'Hapus kasus ini dari penyimpanan lokal?';
+    if (!confirm(msg)) return;
     if (selectedCase && selectedCase.caseId) {
       await db.timeline.where('incidentId').equals(selectedCase.caseId).delete();
       await db.evidence.where('incidentId').equals(selectedCase.caseId).delete();
@@ -259,9 +263,9 @@ export const IncidentManager: React.FC = () => {
       {/* Main Layout: Case List on Left, Case Details & Timeline on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Cases List */}
-        <div className="lg:col-span-4 space-y-3">
+        <div className="lg:col-span-4 space-y-3 min-w-0">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
-            <span>Daftar Kasus ({cases.length})</span>
+            <span>{language === 'en' ? 'Cases' : 'Daftar Kasus'} ({cases.length})</span>
           </div>
 
           {cases.length === 0 ? (
@@ -325,7 +329,7 @@ export const IncidentManager: React.FC = () => {
         </div>
 
         {/* Right Column: Case Detailed Inspection */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 min-w-0">
           {selectedCase ? (
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-6">
               {/* Header Details */}
@@ -366,7 +370,7 @@ export const IncidentManager: React.FC = () => {
                     type="button"
                     onClick={() => selectedCase.id && handleDeleteCase(selectedCase.id)}
                     className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 border border-slate-700"
-                    title="Hapus Kasus"
+                    title={language === 'en' ? 'Delete Case' : 'Hapus Kasus'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -377,7 +381,7 @@ export const IncidentManager: React.FC = () => {
               {selectedCase.summary && (
                 <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
                   <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Ringkasan Insiden
+                    {language === 'en' ? 'Incident Summary' : 'Ringkasan Insiden'}
                   </div>
                   <p className="text-xs sm:text-sm text-slate-300 whitespace-pre-wrap">
                     {selectedCase.summary}

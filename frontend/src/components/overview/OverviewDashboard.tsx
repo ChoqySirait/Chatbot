@@ -177,7 +177,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
       {/* Main Grid: Recent History + Privacy & Quick Launch */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Recent Analyses */}
-        <div className="lg:col-span-7 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div className="lg:col-span-7 min-w-0 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-white text-sm">{t.overviewTab.recentTitle}</h3>
             <span className="text-[11px] font-mono text-slate-500">
@@ -237,7 +237,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
         </div>
 
         {/* Right Side: Quick Launch & Privacy Notice */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 min-w-0 space-y-4">
           <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-3">
             <h3 className="font-bold text-white text-sm flex items-center gap-2">
               <Lock className="w-4 h-4 text-emerald-400" />

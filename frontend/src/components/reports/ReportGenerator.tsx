@@ -274,7 +274,7 @@ __________________________
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4 min-w-0">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 {language === 'en' ? 'Dispute Letter Parameters' : 'Parameter Surat Sanggahan'}
               </h3>
@@ -368,7 +368,7 @@ __________________________
               </div>
             </div>
 
-            <div className="lg:col-span-7 bg-white text-slate-900 rounded-2xl p-8 shadow-xl font-serif text-xs leading-relaxed border border-slate-300 print:border-none print:shadow-none print:p-0">
+            <div className="lg:col-span-7 min-w-0 bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-xl font-serif text-xs leading-relaxed border border-slate-300 print:border-none print:shadow-none print:p-0">
               <div className="border-b-2 border-slate-900 pb-3 mb-4 text-center">
                 <div className="font-bold tracking-widest text-sm uppercase">SecurAI Dispute Notice</div>
                 <div className="text-[10px] text-slate-600 font-sans">

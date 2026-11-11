@@ -61,7 +61,11 @@ export const EvidenceVault: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Hapus artefak bukti ini dari brankas lokal?')) return;
+    const msg =
+      language === 'en'
+        ? 'Delete this evidence artifact from your local vault?'
+        : 'Hapus artefak bukti ini dari brankas lokal?';
+    if (!confirm(msg)) return;
     await db.evidence.delete(id);
     await loadEvidence();
   };

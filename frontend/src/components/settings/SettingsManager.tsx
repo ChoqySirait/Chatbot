@@ -218,7 +218,11 @@ export const SettingsManager: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-slate-400">Status Response:</span>
             <span className="text-emerald-400 font-semibold">
-              {backendHealth ? JSON.stringify(backendHealth) : 'Belum diperiksa'}
+              {backendHealth
+                ? JSON.stringify(backendHealth)
+                : language === 'en'
+                  ? 'Not checked yet'
+                  : 'Belum diperiksa'}
             </span>
           </div>
         </div>

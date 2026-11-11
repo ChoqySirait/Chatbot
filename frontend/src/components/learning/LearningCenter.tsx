@@ -290,7 +290,9 @@ export const LearningCenter: React.FC = () => {
               {/* Progress bar */}
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span className="font-semibold uppercase tracking-wider text-emerald-400">
-                  Skenario {currentIdx + 1} dari {QUIZ_QUESTIONS.length}
+                  {isId
+                    ? `Skenario ${currentIdx + 1} dari ${QUIZ_QUESTIONS.length}`
+                    : `Scenario ${currentIdx + 1} of ${QUIZ_QUESTIONS.length}`}
                 </span>
                 <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
                   {currentQ.category}
@@ -308,7 +310,7 @@ export const LearningCenter: React.FC = () => {
               <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between text-[11px] text-slate-500 border-b border-slate-800/80 pb-2">
                   <span className="font-mono text-cyan-400 font-semibold">{currentQ.sender}</span>
-                  <span>Hari Ini, 14:28</span>
+                  <span>{isId ? 'Hari Ini, 14:28' : 'Today, 14:28'}</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-200 font-sans leading-relaxed pt-1 whitespace-pre-wrap select-all">
                   {currentQ.messageContent}
@@ -324,7 +326,7 @@ export const LearningCenter: React.FC = () => {
                     className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-emerald-950 hover:border-emerald-700/80 text-slate-200 hover:text-emerald-300 font-semibold text-xs border border-slate-700 flex items-center justify-center gap-2 transition-all"
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Aman / Wajar</span>
+                    <span>{isId ? 'Aman / Wajar' : 'Safe / Legitimate'}</span>
                   </button>
 
                   <button
@@ -333,7 +335,7 @@ export const LearningCenter: React.FC = () => {
                     className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-rose-950 hover:border-rose-700/80 text-slate-200 hover:text-rose-300 font-semibold text-xs border border-slate-700 flex items-center justify-center gap-2 transition-all"
                   >
                     <ShieldAlert className="w-4 h-4 text-rose-400" />
-                    <span>Penipuan / Phishing</span>
+                    <span>{isId ? 'Penipuan / Phishing' : 'Scam / Phishing'}</span>
                   </button>
                 </div>
               ) : (
@@ -343,11 +345,17 @@ export const LearningCenter: React.FC = () => {
                     <div className="p-4 rounded-xl bg-emerald-950/70 border border-emerald-700/70 text-emerald-300 text-xs flex items-center gap-2.5">
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
-                        <span className="font-bold block text-sm">Tepat Sekali! Analisis Anda Benar.</span>
+                        <span className="font-bold block text-sm">
+                          {isId ? 'Tepat Sekali! Analisis Anda Benar.' : 'Spot On! Your Analysis Is Correct.'}
+                        </span>
                         <span className="opacity-90">
-                          {currentQ.isPhishing
-                            ? 'Pesan ini adalah indikasi ancaman siber.'
-                            : 'Pesan ini adalah notifikasi resmi tanpa indikasi ancaman.'}
+                          {isId
+                            ? currentQ.isPhishing
+                              ? 'Pesan ini adalah indikasi ancaman siber.'
+                              : 'Pesan ini adalah notifikasi resmi tanpa indikasi ancaman.'
+                            : currentQ.isPhishing
+                              ? 'This message exhibits clear cyber threat indicators.'
+                              : 'This message is a legitimate notification with no threat indicators.'}
                         </span>
                       </div>
                     </div>
@@ -355,22 +363,37 @@ export const LearningCenter: React.FC = () => {
                     <div className="p-4 rounded-xl bg-rose-950/70 border border-rose-700/70 text-rose-300 text-xs flex items-center gap-2.5">
                       <XCircle className="w-5 h-5 text-rose-400 shrink-0" />
                       <div>
-                        <span className="font-bold block text-sm">Kurang Tepat!</span>
+                        <span className="font-bold block text-sm">
+                          {isId ? 'Kurang Tepat!' : 'Not Quite Right!'}
+                        </span>
                         <span className="opacity-90">
-                          Pesan ini sebenarnya{' '}
-                          {currentQ.isPhishing ? 'BERBAHAYA (Phishing/Scam)' : 'AMAN (Resmi)'}.
+                          {isId ? (
+                            <>
+                              Pesan ini sebenarnya{' '}
+                              {currentQ.isPhishing ? 'BERBAHAYA (Phishing/Scam)' : 'AMAN (Resmi)'}.
+                            </>
+                          ) : (
+                            <>
+                              This message is actually{' '}
+                              {currentQ.isPhishing ? 'DANGEROUS (Phishing/Scam)' : 'SAFE (Legitimate)'}.
+                            </>
+                          )}
                         </span>
                       </div>
                     </div>
                   )}
 
                   <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
-                    <span className="font-bold text-slate-300 block">Penjelasan Forensik:</span>
+                    <span className="font-bold text-slate-300 block">
+                      {isId ? 'Penjelasan Forensik:' : 'Forensic Explanation:'}
+                    </span>
                     <p className="text-slate-400 leading-relaxed">
                       {isId ? currentQ.explanationId : currentQ.explanationEn}
                     </p>
 
-                    <span className="font-bold text-slate-300 block pt-2">Indikator Kunci (Red Flags):</span>
+                    <span className="font-bold text-slate-300 block pt-2">
+                      {isId ? 'Indikator Kunci (Red Flags):' : 'Key Indicators (Red Flags):'}
+                    </span>
                     <ul className="list-disc list-inside space-y-1 text-slate-400">
                       {(isId ? currentQ.redFlagsId : currentQ.redFlagsEn).map((flag, idx) => (
                         <li key={idx} className="text-slate-300">{flag}</li>
@@ -384,7 +407,15 @@ export const LearningCenter: React.FC = () => {
                       onClick={handleNext}
                       className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
                     >
-                      <span>{currentIdx + 1 === QUIZ_QUESTIONS.length ? 'Lihat Skor Akhir' : 'Lanjut Skenario Berikutnya'}</span>
+                      <span>
+                        {currentIdx + 1 === QUIZ_QUESTIONS.length
+                          ? isId
+                            ? 'Lihat Skor Akhir'
+                            : 'View Final Score'
+                          : isId
+                            ? 'Lanjut Skenario Berikutnya'
+                            : 'Next Scenario'}
+                      </span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -399,7 +430,9 @@ export const LearningCenter: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-white mb-1">Simulasi Selesai!</h3>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  {isId ? 'Simulasi Selesai!' : 'Simulation Complete!'}
+                </h3>
                 <p className="text-xs text-slate-400">{t.learnTab.scoreResult}</p>
               </div>
 
@@ -412,8 +445,12 @@ export const LearningCenter: React.FC = () => {
 
               <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
                 {calculateScore() >= 80
-                  ? 'Luar biasa! Anda memiliki kepekaan tajam terhadap domain tiruan, file APK berbahaya, dan desakan rekayasa sosial.'
-                  : 'Tetap waspada! Pelajari katalog studi kasus di sebelah untuk mengenali teknik penyamaran yang sering dipakai pelaku.'}
+                  ? isId
+                    ? 'Luar biasa! Anda memiliki kepekaan tajam terhadap domain tiruan, file APK berbahaya, dan desakan rekayasa sosial.'
+                    : 'Excellent! You recognize lookalike domains, malicious APK payloads, and social-engineering urgency.'
+                  : isId
+                    ? 'Tetap waspada! Pelajari katalog studi kasus di sebelah untuk mengenali teknik penyamaran yang sering dipakai pelaku.'
+                    : 'Stay alert! Explore the case studies tab to recognize common attacker impersonation techniques.'}
               </p>
 
               <div className="pt-4 flex justify-center gap-3">
@@ -423,7 +460,7 @@ export const LearningCenter: React.FC = () => {
                   className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-2 border border-slate-700"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Ulangi Simulasi</span>
+                  <span>{isId ? 'Ulangi Simulasi' : 'Retry Simulation'}</span>
                 </button>
 
                 <button
@@ -431,7 +468,7 @@ export const LearningCenter: React.FC = () => {
                   onClick={() => setSubTab('catalog')}
                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-500/20"
                 >
-                  Pelajari Studi Kasus
+                  {isId ? 'Pelajari Studi Kasus' : 'Explore Case Studies'}
                 </button>
               </div>
             </div>
@@ -468,7 +505,7 @@ export const LearningCenter: React.FC = () => {
                 <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    <span>Langkah Pencegahan Utama:</span>
+                    <span>{isId ? 'Langkah Pencegahan Utama:' : 'Key Prevention Steps:'}</span>
                   </span>
                   <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-300 leading-normal">
                     {(isId ? study.preventionId : study.preventionEn).map((item, idx) => (

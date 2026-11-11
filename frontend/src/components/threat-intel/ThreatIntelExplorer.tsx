@@ -149,7 +149,7 @@ export const ThreatIntelExplorer: React.FC = () => {
       {/* Main Grid: Matrix on Left, Detailed Inspector Card on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Interactive Tactic Columns */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="lg:col-span-7 space-y-4 min-w-0">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
             <Globe className="w-4 h-4 text-cyan-400" />
             <span>{t.threatIntelTab.matrixTitle}</span>
@@ -162,7 +162,9 @@ export const ThreatIntelExplorer: React.FC = () => {
                 <div key={tactic} className="bg-slate-900/40 border border-slate-800/90 rounded-xl p-3.5 space-y-2">
                   <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                     <span>{tactic}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">({techniques.length} Teknik)</span>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      ({techniques.length} {isId ? 'Teknik' : 'Techniques'})
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -197,7 +199,7 @@ export const ThreatIntelExplorer: React.FC = () => {
         </div>
 
         {/* Right Column: Technique Inspector Detail Card */}
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 min-w-0">
           <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-5 sticky top-24">
             {/* Header info */}
             <div className="border-b border-slate-800 pb-4">

@@ -568,7 +568,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       {/* Main Workspace Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Interactive Inputs */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-4 min-w-0">
           {/* SubTab 1: Chat Triage */}
           {activeSubTab === 'chat' && (
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col h-[560px] overflow-hidden">
@@ -942,7 +942,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
         </div>
 
         {/* Right Column: Mode-Specific Output View */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-7 min-w-0">
           {currentResult ? (
             mode === 'consumer' ? (
               <ConsumerView

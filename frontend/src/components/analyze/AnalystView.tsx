@@ -48,14 +48,14 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Telemetry & Score Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Risk Score */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider truncate">
               {t.analyzeTab.scoreLabel}
             </span>
-            <Activity className="w-4 h-4 text-cyan-400" />
+            <Activity className="w-4 h-4 text-cyan-400 shrink-0" />
           </div>
           <div className="my-2">
             <span className={`text-3xl font-extrabold font-mono ${
@@ -71,27 +71,27 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
         </div>
 
         {/* Classification */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between min-w-0">
           <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
-            Classification
+            {language === 'en' ? 'Classification' : 'Klasifikasi'}
           </span>
-          <div className="my-2">
-            <span className="text-sm font-bold font-mono uppercase px-2 py-1 rounded bg-slate-800 text-cyan-300 border border-slate-700 inline-block">
+          <div className="my-2 min-w-0">
+            <span className="text-xs font-bold font-mono uppercase px-2 py-1 rounded bg-slate-800 text-cyan-300 border border-slate-700 inline-block max-w-full break-all leading-tight">
               {result.classification}
             </span>
           </div>
           <span className="text-[10px] text-slate-400">
-            Type: <span className="font-mono text-cyan-400">{result.analysis_type}</span>
+            {language === 'en' ? 'Type' : 'Tipe'}: <span className="font-mono text-cyan-400">{result.analysis_type}</span>
           </span>
         </div>
 
         {/* Confidence Level */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between min-w-0">
+          <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider truncate">
             {t.analyzeTab.confidenceLabel}
           </span>
           <div className="my-2">
-            <span className={`text-base font-bold font-mono uppercase px-2.5 py-1 rounded ${
+            <span className={`text-sm font-bold font-mono uppercase px-2.5 py-1 rounded inline-block ${
               result.confidence === 'high' ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-slate-800 text-slate-300'
             }`}>
               {result.confidence}
@@ -103,7 +103,7 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
         </div>
 
         {/* Quick Action Controls */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-2">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-2 min-w-0">
           <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
             SOC Actions
           </span>
@@ -150,7 +150,7 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
             className="flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono shrink-0"
           >
             {copiedHash ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedHash ? 'Copied' : 'Copy Hash'}</span>
+            <span>{copiedHash ? t.common.copied : t.evidenceTab.btnCopyHash}</span>
           </button>
         </div>
       )}
@@ -185,45 +185,45 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
           </h4>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-            <div className="space-y-2 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                <span className="text-slate-500">Resolved IP:</span>
-                <span className="text-cyan-300 font-semibold">{networkIntel.resolved_ip || 'N/A'}</span>
+            <div className="space-y-2 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 min-w-0">
+              <div className="flex justify-between gap-2 border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-500 shrink-0">Resolved IP:</span>
+                <span className="text-cyan-300 font-semibold truncate">{networkIntel.resolved_ip || 'N/A'}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                <span className="text-slate-500">HTTP Status:</span>
+              <div className="flex justify-between gap-2 border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-500 shrink-0">HTTP Status:</span>
                 <span className="text-slate-200">{networkIntel.status_code || 'N/A'}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                <span className="text-slate-500">Server Header:</span>
-                <span className="text-slate-200 truncate max-w-[200px]">{networkIntel.server_header || 'N/A'}</span>
+              <div className="flex justify-between gap-2 border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-500 shrink-0">Server Header:</span>
+                <span className="text-slate-200 truncate">{networkIntel.server_header || 'N/A'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Redirect Hops:</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 shrink-0">Redirect Hops:</span>
                 <span className="text-slate-200">{networkIntel.redirect_hops ?? 0}</span>
               </div>
             </div>
 
-            <div className="space-y-2 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                <span className="text-slate-500">SSL Issuer:</span>
-                <span className="text-slate-200 truncate max-w-[200px]">{networkIntel.ssl_issuer || 'N/A'}</span>
+            <div className="space-y-2 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 min-w-0">
+              <div className="flex justify-between gap-2 border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-500 shrink-0">SSL Issuer:</span>
+                <span className="text-slate-200 truncate">{networkIntel.ssl_issuer || 'N/A'}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                <span className="text-slate-500">SSL Expiry:</span>
-                <span className="text-slate-200">{networkIntel.ssl_expiry || 'N/A'}</span>
+              <div className="flex justify-between gap-2 border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-500 shrink-0">SSL Expiry:</span>
+                <span className="text-slate-200 truncate">{networkIntel.ssl_expiry || 'N/A'}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                <span className="text-slate-500">RDAP Domain Age:</span>
+              <div className="flex justify-between gap-2 border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-500 shrink-0">RDAP Domain Age:</span>
                 <span className="text-slate-200">
                   {networkIntel.rdap_domain_age_days !== undefined
                     ? `${networkIntel.rdap_domain_age_days} days`
                     : 'N/A'}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Registrar:</span>
-                <span className="text-slate-200 truncate max-w-[200px]">{networkIntel.rdap_registrar || 'N/A'}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-slate-500 shrink-0">Registrar:</span>
+                <span className="text-slate-200 truncate">{networkIntel.rdap_registrar || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -259,14 +259,14 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
                 key={idx}
                 className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 space-y-1 text-xs"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/60 text-[10px]">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-mono text-cyan-400 font-bold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/60 text-[10px] shrink-0">
                       {f.rule_id}
                     </span>
                     <span className="font-semibold text-white">{f.title}</span>
                   </div>
-                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${
                     f.severity === 'critical' || f.severity === 'high'
                       ? 'bg-rose-950 text-rose-300 border border-rose-800'
                       : 'bg-amber-950 text-amber-300 border border-amber-800'
@@ -274,11 +274,11 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
                     {f.severity}
                   </span>
                 </div>
-                <div className="font-mono text-slate-300 text-[11px] pt-1">
+                <div className="font-mono text-slate-300 text-[11px] pt-1 break-words">
                   Evidence: {f.evidence}
                 </div>
                 {f.limitations && f.limitations.length > 0 && (
-                  <div className="text-[10px] text-slate-500 italic">
+                  <div className="text-[10px] text-slate-500 italic break-words">
                     Limitation: {f.limitations.join(', ')}
                   </div>
                 )}
@@ -297,7 +297,11 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
             className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 font-mono"
           >
             <Code2 className="w-3.5 h-3.5" />
-            <span>{showJson ? 'Sembunyikan Raw JSON' : 'Tampilkan Canonical JSON Schema'}</span>
+            <span>
+              {showJson
+                ? (language === 'en' ? 'Hide Raw JSON' : 'Sembunyikan Raw JSON')
+                : (language === 'en' ? 'Show Canonical JSON Schema' : 'Tampilkan Canonical JSON Schema')}
+            </span>
           </button>
 
           {showJson && (
@@ -307,13 +311,13 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
               className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 font-mono"
             >
               {copiedJson ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedJson ? 'Copied' : 'Copy JSON'}</span>
+              <span>{copiedJson ? t.common.copied : t.common.copy} JSON</span>
             </button>
           )}
         </div>
 
         {showJson && (
-          <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 overflow-x-auto max-h-96">
+          <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300 overflow-x-auto max-h-96 max-w-full">
             {JSON.stringify(result, null, 2)}
           </pre>
         )}
