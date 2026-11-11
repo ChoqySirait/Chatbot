@@ -7,10 +7,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app.config import settings
-from app.schemas import ChatRequest, ChatResponse, HeuristicResult, CanonicalAnalysisResult
+from app.schemas import ChatRequest, ChatResponse, HeuristicResult, CanonicalAnalysisResult, ImageAnalysisRequest
 from app.core.security import sanitize_user_input, check_prompt_injection
 from app.core.heuristics import analyze_heuristics
-from app.services.ai_service import process_chat_with_gemini
+from app.core.image_security import validate_and_inspect_image, ImageValidationError
+from app.services.ai_service import process_chat_with_gemini, analyze_image_with_ai
 from app.core.logging_config import setup_logging
 from app.core.middleware import SecurityHeadersMiddleware, RateLimitAndPayloadMiddleware
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,12 +30,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitAndPayloadMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -106,6 +102,29 @@ async def analyze_message_endpoint(req: MessageAnalysisRequest):
     return canonical
 
 
+@app.post("/api/v1/analyze/image", response_model=CanonicalAnalysisResult)
+async def analyze_image_endpoint(req: ImageAnalysisRequest):
+    try:
+        validated_image = validate_and_inspect_image(req.image_base64)
+    except ImageValidationError as err:
+        raise HTTPException(status_code=err.status_code, detail=err.message)
+
+    clean_note = sanitize_user_input(req.context_note or "")
+    if clean_note and check_prompt_injection(clean_note):
+        raise HTTPException(
+            status_code=400,
+            detail="Catatan konteks ditolak karena terdeteksi indikasi prompt injection."
+        )
+
+    return await asyncio.to_thread(
+        analyze_image_with_ai,
+        validated_image,
+        clean_note,
+        req.mode,
+        req.external_ai_consent,
+    )
+
+
 # Blok endpoint utama yang menangani request secara non-blocking (Kompatibilitas Penuh)
 @app.post("/api/chat", response_model=ChatResponse)
 async def handle_chat(req: ChatRequest):
@@ -121,12 +140,18 @@ async def handle_chat(req: ChatRequest):
             threat_category="Aktif Berbahaya (Malicious)"
         )
 
+    if req.image_base64:
+        try:
+            validate_and_inspect_image(req.image_base64)
+        except ImageValidationError as err:
+            raise HTTPException(status_code=err.status_code, detail=err.message)
+
     # 1. Jalankan Analisis Heuristik & Jaringan secara Asinkron
     heuristics_dict = await analyze_heuristics(clean_message)
 
     # 2. Proses AI di background threadpool agar loop server tetap responsif
     reply, mitre_tags, category = await asyncio.to_thread(
-        process_chat_with_gemini, clean_message, req.history, heuristics_dict, req.image_base64
+        process_chat_with_gemini, clean_message, req.history, heuristics_dict, req.image_base64, req.mode
     )
 
     heuristic_result = None

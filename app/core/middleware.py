@@ -9,6 +9,8 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
+from app.config import settings
+
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
@@ -68,7 +70,7 @@ class InMemoryRateLimiter:
 
 
 # Global limiter instance for API routes
-api_rate_limiter = InMemoryRateLimiter(requests_per_minute=120, window_seconds=60)
+api_rate_limiter = InMemoryRateLimiter(requests_per_minute=settings.RATE_LIMIT_PER_MINUTE, window_seconds=60)
 
 
 class RateLimitAndPayloadMiddleware(BaseHTTPMiddleware):

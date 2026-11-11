@@ -11,6 +11,14 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
     history: List[Message] = Field(default_factory=list)
     image_base64: Optional[str] = None
+    mode: Literal["consumer", "analyst"] = "consumer"
+
+
+class ImageAnalysisRequest(BaseModel):
+    image_base64: str = Field(..., min_length=1, description="Data base64 gambar PNG, JPEG, atau WEBP")
+    context_note: str = Field("", max_length=2000, description="Catatan konteks tambahan dari pengguna")
+    mode: Literal["consumer", "analyst"] = "consumer"
+    external_ai_consent: bool = False
 
 # Blok model temuan terstruktur kanonis (Epic 2: ANA-01)
 class AnalysisFinding(BaseModel):
