@@ -59,6 +59,11 @@ jobs:
           cd frontend
           npx tsc -b --noEmit
 
+      - name: Run Frontend Unit Tests (Vitest)
+        run: |
+          cd frontend
+          npm run test
+
       - name: Build Frontend Application
         run: |
           cd frontend

@@ -29,8 +29,12 @@ SecurAI dirancang khusus sebagai platform analisis defensif, Digital Trust, dan 
 
 ### 2.5 Batasan Beban & Laju Permintaan (SEC-08, SEC-09)
 - Pembatasan muatan request maksimal 5 MB (HTTP 413).
-- *Sliding-window in-memory rate limiting* (120 req/menit per client IP) dengan respons HTTP 429 dan header `Retry-After`.
+- *Sliding-window in-memory rate limiting* yang dapat dikonfigurasi via `RATE_LIMIT_PER_MINUTE` (default 120 req/menit per client IP) dengan respons HTTP 429 dan header `Retry-After`.
 - Header keamanan defensif aktif: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, strict CSP, dan `Permissions-Policy`.
+
+### 2.6 Validasi Berkas Gambar & Persetujuan AI Eksternal (SEC-06, AI-07)
+- Endpoint `/api/v1/analyze/image` dan lampiran gambar `/api/v1/chat` memvalidasi integritas decode base64, tipe MIME yang diizinkan (`image/png`, `image/jpeg`, `image/webp`), pencocokan *magic bytes* container aktual via Pillow, batas ukuran biner mentah 3 MB, serta batas dimensi 4096×4096 px (maks ~16,7 juta piksel) untuk mencegah *decompression bomb* atau *image spoofing* (SVG/skrip).
+- Pengiriman gambar ke penyedia AI eksternal (Google Gemini Vision) hanya berjalan apabila `external_ai_consent=true` dikirimkan secara eksplisit oleh pengguna; bila nonaktif, sistem hanya menjalankan pemeriksaan container lokal dan segel SHA-256 64-karakter.
 
 ---
 

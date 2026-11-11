@@ -5,8 +5,8 @@
 [![Author: ChoqySirait](https://img.shields.io/badge/Author-Choqy%20Pananda%20Sirait-0284C7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ChoqySirait)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Tests Passed](https://img.shields.io/badge/Pytest-79%2F79%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
-[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20TS-oxlint%200%20warn-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
+[![Tests Passed](https://img.shields.io/badge/Pytest-83%2F83%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-7%2F7%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 
 <p align="center">
@@ -74,7 +74,7 @@ sequenceDiagram
     alt Pemeriksaan Berkas Lokal (.apk / .exe / .pdf)
         UI->>UI: Web Crypto SHA-256 + Magic-Byte Inspection (Zero Upload)
     else Permintaan Inspeksi Backend
-        UI->>GW: POST /api/chat atau /api/v1/analyze/*
+        UI->>GW: POST /api/v1/chat atau /api/v1/analyze/* (id/en)
         GW->>SEC: Cek SSRF DNS/IP atau Magic-Byte & Pixel Guard
         alt Melanggar Batas Keamanan
             SEC-->>GW: Tolak Permintaan (HTTP 400 / 413)
@@ -139,6 +139,7 @@ cp .env.example .env
 # Bangun frontend produksi React -> app/static/dist/
 npm --prefix frontend ci
 npm --prefix frontend run lint
+npm --prefix frontend run test
 npm --prefix frontend run build
 
 # Jalankan server FastAPI (menyajikan frontend + API di port 8000)
@@ -146,12 +147,13 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 Buka browser pada alamat: `http://127.0.0.1:8000`.
 
-### 2. Menjalankan Automated Tests (Pytest Offline) & Linter
+### 2. Menjalankan Automated Tests (Pytest + Vitest Offline) & Linter
 ```bash
 pytest -v
 npm --prefix frontend run lint
+npm --prefix frontend run test
 ```
-*Hasil aktual terakhir:* **79/79 test cases Pytest lulus 100% (offline dengan mocking deterministik)**, serta **0 warnings / 0 errors** pada `oxlint`.
+*Hasil aktual terakhir:* **83/83 test cases Pytest lulus 100% (offline dengan mocking deterministik)**, **7/7 unit test Vitest lulus**, serta **0 warnings / 0 errors** pada `oxlint`. Antarmuka menggunakan tema tunggal **Dark Slate** minimalis tanpa banner berulang agar kontras konsisten di seluruh modul (kecuali pratinjau cetak putih pada Surat Sanggahan Bank).
 
 ### 3. Menjalankan dengan Docker / Docker Compose
 Pastikan `.env` tersedia (salin dari `.env.example`), lalu bangun dan jalankan container produksi:
