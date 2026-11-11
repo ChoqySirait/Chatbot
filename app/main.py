@@ -133,19 +133,29 @@ async def analyze_image_endpoint(req: ImageAnalysisRequest):
         clean_note,
         req.mode,
         req.external_ai_consent,
+        req.language,
     )
 
 
-# Blok endpoint utama yang menangani request secara non-blocking (Kompatibilitas Penuh)
+# Blok endpoint utama yang menangani request secara non-blocking (Kompatibilitas Penuh + /api/v1/chat)
+@app.post("/api/v1/chat", response_model=ChatResponse)
 @app.post("/api/chat", response_model=ChatResponse)
 async def handle_chat(req: ChatRequest):
     clean_message = sanitize_user_input(req.message)
     if not clean_message and not req.image_base64:
-        raise HTTPException(status_code=400, detail="Pesan atau gambar tidak boleh kosong.")
+        raise HTTPException(
+            status_code=400,
+            detail="Message or image cannot be empty." if req.language == "en" else "Pesan atau gambar tidak boleh kosong.",
+        )
 
     if check_prompt_injection(clean_message):
+        injection_reply = (
+            "Security control detected a prompt-injection override attempt. The request was blocked to preserve policy boundaries."
+            if req.language == "en"
+            else "Sistem mendeteksi upaya penimpaan instruksi (*Prompt Injection*). Permintaan dibatalkan demi kepatuhan keamanan."
+        )
         return ChatResponse(
-            reply="Sistem mendeteksi upaya penimpaan instruksi (*Prompt Injection*). Permintaan dibatalkan demi kepatuhan keamanan.",
+            reply=injection_reply,
             heuristics=None,
             mitre_tags=["MITRE T1059 (Command Execution Attempt)"],
             threat_category="Aktif Berbahaya (Malicious)"
@@ -162,7 +172,13 @@ async def handle_chat(req: ChatRequest):
 
     # 2. Proses AI di background threadpool agar loop server tetap responsif
     reply, mitre_tags, category = await asyncio.to_thread(
-        process_chat_with_gemini, clean_message, req.history, heuristics_dict, req.image_base64, req.mode
+        process_chat_with_gemini,
+        clean_message,
+        req.history,
+        heuristics_dict,
+        req.image_base64,
+        req.mode,
+        req.language,
     )
 
     heuristic_result = None

@@ -89,9 +89,27 @@ PEDOMAN ANALYST MODE:
 """
 
 
+def _build_system_instruction(mode: str, language: str) -> str:
+    """Menggabungkan instruksi peran Consumer/Analyst dengan kendali bahasa keluaran (AI-06)."""
+    base = ANALYST_SYSTEM_INSTRUCTION if mode == "analyst" else CONSUMER_SYSTEM_INSTRUCTION
+    if language == "en":
+        lang_suffix = (
+            "\n\nOUTPUT LANGUAGE REQUIREMENT:\n"
+            "- Write `reply`, `risk_summary`, and `recommended_actions` in natural, clear, empathetic English.\n"
+            "- Keep `threat_category` strictly to the defined enum strings (`Resmi/Aman`, `Ilegal (Risiko Iklan/Malvertising)`, `Aktif Berbahaya (Malicious)`, or `Informasi Umum`)."
+        )
+    else:
+        lang_suffix = (
+            "\n\nKEBUTUHAN BAHASA KELUARAN:\n"
+            "- Tulis `reply`, `risk_summary`, dan `recommended_actions` dalam Bahasa Indonesia yang jelas, natural, dan terstruktur."
+        )
+    return base + lang_suffix
+
+
 def _generate_deterministic_local_fallback(
     message: str,
-    heuristic_data: Dict[str, Any]
+    heuristic_data: Dict[str, Any],
+    language: str = "id"
 ) -> Tuple[str, List[str], str]:
     """
     Fallback deterministik berbasis aturan lokal jika API Gemini tidak tersedia.
@@ -109,42 +127,78 @@ def _generate_deterministic_local_fallback(
     if any("kredensial" in f.lower() or "otp" in f.lower() for f in flags):
         mitre_tags.append("MITRE T1056.003 (Credential Harvesting)")
 
+    is_en = language == "en"
+
     if score >= 60:
         cat = "Aktif Berbahaya (Malicious)"
-        reply = (
-            "Hasil analisis telemetri lokal kami mendeteksi indikasi risiko TINGGI pada permintaan ini. "
-            f"Temuan utama: {'; '.join(flags[:2]) if flags else 'Terdeteksi pola berbahaya'}. "
-            "Jangan mengklik tautan, jangan menginstal berkas, dan jangan mengirimkan saldo atau kode OTP."
-        )
-    elif score >= 20:
-        cat = "Ilegal (Risiko Iklan/Malvertising)" if any("komik" in f.lower() or "media non-resmi" in f.lower() for f in flags) else "Informasi Umum"
-        reply = (
-            "Hasil telemetri lokal mendeteksi elemen yang perlu diwaspadai: "
-            f"{'; '.join(flags[:2]) if flags else 'Perlu kehati-hatian'}. "
-            "Pastikan melakukan verifikasi ulang sebelum bertransaksi."
-        )
-    elif net and net.get("domain"):
-        cat = "Resmi/Aman"
-        domain_name = net.get("domain")
-        reply = (
-            f"{domain_name} telah diperiksa. Telemetri jaringan menunjukkan SSL valid dan tidak ditemukan indikator ancaman umum. "
-            "Tetap pastikan Anda mengakses kanal resmi."
-        )
-    else:
-        cat = "Informasi Umum"
-        lowered = (message or "").strip().lower()
-        if any(k in lowered for k in ("ketipu", "tertipu", "transfer", "hilang", "kehilangan", "saldo")):
+        if is_en:
             reply = (
-                "Saya turut prihatin mendengarnya. Ceritakan kronologinya pelan-pelan di sini (misal: kronologi transfer, nomor rekening/tautan pelaku, atau tangkapan layar). "
-                "Langkah darurat pertama: segera hubungi call center resmi bank Anda untuk pelaporan pemblokiran/hold dana, dan gunakan menu Surat Sanggahan & Laporan bila butuh draf resmi. "
-                "(Catatan: Mesin AI percakapan eksternal sedang fallback ke mode lokal, namun pemeriksaan tautan/pesan & penyimpanan kasus tetap berjalan normal.)"
+                "Local telemetry detected HIGH-risk threat indicators in this request. "
+                f"Key findings: {'; '.join(flags[:2]) if flags else 'Dangerous pattern detected'}. "
+                "Do not click any links, do not install files, and never share OTP codes or funds."
             )
         else:
             reply = (
-                "Halo! Tentu, silakan ceritakan situasi atau keluhan keamanan yang sedang Anda alami. "
-                "Anda bisa mengobrol langsung di sini atau menempelkan teks chat/SMS mencurigakan maupun tautan URL kapan saja untuk saya bantu evaluasi. "
-                "(Catatan: Saat ini server sedang menggunakan mode fallback aturan lokal karena model AI eksternal tidak merespons.)"
+                "Hasil analisis telemetri lokal kami mendeteksi indikasi risiko TINGGI pada permintaan ini. "
+                f"Temuan utama: {'; '.join(flags[:2]) if flags else 'Terdeteksi pola berbahaya'}. "
+                "Jangan mengklik tautan, jangan menginstal berkas, dan jangan mengirimkan saldo atau kode OTP."
             )
+    elif score >= 20:
+        cat = "Ilegal (Risiko Iklan/Malvertising)" if any("komik" in f.lower() or "media non-resmi" in f.lower() for f in flags) else "Informasi Umum"
+        if is_en:
+            reply = (
+                "Local telemetry flagged elements requiring caution: "
+                f"{'; '.join(flags[:2]) if flags else 'Elevated caution advised'}. "
+                "Verify through official channels before interacting or transacting."
+            )
+        else:
+            reply = (
+                "Hasil telemetri lokal mendeteksi elemen yang perlu diwaspadai: "
+                f"{'; '.join(flags[:2]) if flags else 'Perlu kehati-hatian'}. "
+                "Pastikan melakukan verifikasi ulang sebelum bertransaksi."
+            )
+    elif net and net.get("domain"):
+        cat = "Resmi/Aman"
+        domain_name = net.get("domain")
+        if is_en:
+            reply = (
+                f"{domain_name} has been inspected. Network telemetry indicates a valid SSL certificate with no common threat flags triggered. "
+                "Still ensure you are accessing the official channel."
+            )
+        else:
+            reply = (
+                f"{domain_name} telah diperiksa. Telemetri jaringan menunjukkan SSL valid dan tidak ditemukan indikator ancaman umum. "
+                "Tetap pastikan Anda mengakses kanal resmi."
+            )
+    else:
+        cat = "Informasi Umum"
+        lowered = (message or "").strip().lower()
+        if any(k in lowered for k in ("ketipu", "tertipu", "transfer", "hilang", "kehilangan", "saldo", "scam", "scammed", "fraud", "stolen")):
+            if is_en:
+                reply = (
+                    "I'm sorry to hear that. Feel free to share the timeline step by step here (such as transfer details, suspicious account numbers/links, or screenshots). "
+                    "First emergency step: immediately contact your bank's official hotline to freeze or dispute the transaction, and use the Dispute & Report tab if you need a structured draft. "
+                    "(Note: External conversational AI is currently in local fallback mode, while URL/message scanning and local case storage continue operating normally.)"
+                )
+            else:
+                reply = (
+                    "Saya turut prihatin mendengarnya. Ceritakan kronologinya pelan-pelan di sini (misal: kronologi transfer, nomor rekening/tautan pelaku, atau tangkapan layar). "
+                    "Langkah darurat pertama: segera hubungi call center resmi bank Anda untuk pelaporan pemblokiran/hold dana, dan gunakan menu Surat Sanggahan & Laporan bila butuh draf resmi. "
+                    "(Catatan: Mesin AI percakapan eksternal sedang fallback ke mode lokal, namun pemeriksaan tautan/pesan & penyimpanan kasus tetap berjalan normal.)"
+                )
+        else:
+            if is_en:
+                reply = (
+                    "Hello! Feel free to describe any digital security concern or incident you are facing. "
+                    "You can chat naturally here or paste suspicious SMS/WhatsApp text or URLs anytime for an immediate safety check. "
+                    "(Note: The server is currently using local rule-based fallback because external AI models did not respond.)"
+                )
+            else:
+                reply = (
+                    "Halo! Tentu, silakan ceritakan situasi atau keluhan keamanan yang sedang Anda alami. "
+                    "Anda bisa mengobrol langsung di sini atau menempelkan teks chat/SMS mencurigakan maupun tautan URL kapan saja untuk saya bantu evaluasi. "
+                    "(Catatan: Saat ini server sedang menggunakan mode fallback aturan lokal karena model AI eksternal tidak merespons.)"
+                )
 
     return reply, mitre_tags, cat
 
@@ -154,7 +208,8 @@ def process_chat_with_gemini(
     history: List[Message],
     heuristic_data: Dict[str, Any],
     image_base64: str = None,
-    mode: str = "consumer"
+    mode: str = "consumer",
+    language: str = "id"
 ) -> Tuple[str, List[str], str]:
     """
     Memproses konsultasi keamanan siber via Google GenAI SDK:
@@ -166,7 +221,7 @@ def process_chat_with_gemini(
     """
     if not settings.GEMINI_API_KEY:
         logger.info("GEMINI_API_KEY tidak dikonfigurasi, mengaktifkan fallback lokal.")
-        return _generate_deterministic_local_fallback(message, heuristic_data)
+        return _generate_deterministic_local_fallback(message, heuristic_data, language=language)
 
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
@@ -238,8 +293,8 @@ def process_chat_with_gemini(
         )
     gemini_contents.append(types.Content(role="user", parts=parts))
 
-    # 5. Pilih Instruksi Sistem Sesuai Mode
-    system_inst = ANALYST_SYSTEM_INSTRUCTION if mode == "analyst" else CONSUMER_SYSTEM_INSTRUCTION
+    # 5. Pilih Instruksi Sistem Sesuai Mode & Bahasa Keluaran (AI-06)
+    system_inst = _build_system_instruction(mode, language)
 
     # 6. Pemanggilan Model dengan Structured Outputs (Menggunakan MODEL_NAME terkonfigurasi + fallback)
     for model_name in settings.get_ordered_models():
@@ -277,7 +332,7 @@ def process_chat_with_gemini(
 
     # 7. Fallback Deterministik jika seluruh model gagal
     logger.info("Seluruh model Gemini tidak dapat dijangkau, mengaktifkan fallback lokal deterministik.")
-    return _generate_deterministic_local_fallback(message, heuristic_data)
+    return _generate_deterministic_local_fallback(message, heuristic_data, language=language)
 
 
 def analyze_image_with_ai(
@@ -285,6 +340,7 @@ def analyze_image_with_ai(
     context_note: str = "",
     mode: str = "consumer",
     external_ai_consent: bool = False,
+    language: str = "id",
 ) -> CanonicalAnalysisResult:
     """
     Menganalisis tangkapan layar terverifikasi (SEC-06) secara modular (Section 5.4 / AI-07).
@@ -294,31 +350,53 @@ def analyze_image_with_ai(
     """
     now_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
     analysis_id = str(uuid.uuid4())[:8]
+    is_en = language == "en"
 
     findings: List[AnalysisFinding] = [
         AnalysisFinding(
             rule_id="IMG-METADATA-001",
-            title="Validasi Kontainer & Integritas Tangkapan Layar",
+            title="Screenshot Container & Integrity Validation" if is_en else "Validasi Kontainer & Integritas Tangkapan Layar",
             severity="info",
             evidence=(
                 f"Format={validated_image.image_format}, MIME={validated_image.mime_type}, "
-                f"Dimensi={validated_image.width}x{validated_image.height}, "
-                f"Ukuran={validated_image.size_bytes} bytes, SHA-256={validated_image.sha256_hash}"
+                f"Dimensions={validated_image.width}x{validated_image.height}, "
+                f"Size={validated_image.size_bytes} bytes, SHA-256={validated_image.sha256_hash}"
+                if is_en
+                else (
+                    f"Format={validated_image.image_format}, MIME={validated_image.mime_type}, "
+                    f"Dimensi={validated_image.width}x{validated_image.height}, "
+                    f"Ukuran={validated_image.size_bytes} bytes, SHA-256={validated_image.sha256_hash}"
+                )
             ),
             source="Local Image Security Guard",
             observed_at=now_utc,
             explanation=(
-                "Tangkapan layar lolos verifikasi magic bytes, ukuran, batas dimensi decompression bomb, "
-                "dan telah disegel dengan hash SHA-256 64-karakter."
+                "Screenshot passed magic-byte validation, file size check, and decompression-bomb bounds, and was sealed with a 64-character SHA-256 digest."
+                if is_en
+                else (
+                    "Tangkapan layar lolos verifikasi magic bytes, ukuran, batas dimensi decompression bomb, "
+                    "dan telah disegel dengan hash SHA-256 64-karakter."
+                )
             ),
-            limitations=["Pemeriksaan metadata lokal tidak membaca teks atau visual di dalam piksel gambar."],
+            limitations=[
+                "Local metadata validation does not inspect pixel text or visual contents."
+                if is_en
+                else "Pemeriksaan metadata lokal tidak membaca teks atau visual di dalam piksel gambar."
+            ],
         )
     ]
 
-    common_limitations = [
-        "Analisis visual AI dapat melakukan salah tafsir dan bukan merupakan bukti hukum absolut.",
-        "Segel SHA-256 membuktikan integritas berkas sejak diunggah, bukan keaslian peristiwa sebelum tangkapan layar dibuat.",
-    ]
+    common_limitations = (
+        [
+            "AI visual analysis can misinterpret screenshots and is not standalone legal proof.",
+            "SHA-256 seals file integrity from the moment of upload, not historical authenticity prior to capture.",
+        ]
+        if is_en
+        else [
+            "Analisis visual AI dapat melakukan salah tafsir dan bukan merupakan bukti hukum absolut.",
+            "Segel SHA-256 membuktikan integritas berkas sejak diunggah, bukan keaslian peristiwa sebelum tangkapan layar dibuat.",
+        ]
+    )
 
     if not external_ai_consent:
         return CanonicalAnalysisResult(
@@ -329,12 +407,23 @@ def analyze_image_with_ai(
             confidence="low",
             findings=findings,
             mitre_techniques=[],
-            recommended_actions=[
-                "Aktifkan persetujuan pengiriman AI eksternal jika Anda ingin analisis visual isi tangkapan layar.",
-                "Atau tempelkan tautan URL / teks pesan dari tangkapan layar ke tab Analisis URL/Pesan untuk pemeriksaan luring lokal.",
-            ],
+            recommended_actions=(
+                [
+                    "Enable external AI upload consent if you want visual inspection of the screenshot contents.",
+                    "Or paste URLs / message text from the screenshot into URL/Message Analysis for offline local inspection.",
+                ]
+                if is_en
+                else [
+                    "Aktifkan persetujuan pengiriman AI eksternal jika Anda ingin analisis visual isi tangkapan layar.",
+                    "Atau tempelkan tautan URL / teks pesan dari tangkapan layar ke tab Analisis URL/Pesan untuk pemeriksaan luring lokal.",
+                ]
+            ),
             limitations=[
-                "Analisis visual AI dilewati karena persetujuan pengiriman data eksternal belum diberikan (AI-07).",
+                (
+                    "AI visual analysis skipped because external data consent was not granted (AI-07)."
+                    if is_en
+                    else "Analisis visual AI dilewati karena persetujuan pengiriman data eksternal belum diberikan (AI-07)."
+                ),
                 *common_limitations,
             ],
             provider_status={
@@ -355,10 +444,14 @@ def analyze_image_with_ai(
             findings=findings,
             mitre_techniques=[],
             recommended_actions=[
-                "Kunci API AI server belum dikonfigurasi. Gunakan inspeksi URL/Pesan heuristik lokal atau simpan bukti ke brankas."
+                "Server AI API key is not configured. Use local URL/Message heuristics or save the screenshot to Evidence Vault."
+                if is_en
+                else "Kunci API AI server belum dikonfigurasi. Gunakan inspeksi URL/Pesan heuristik lokal atau simpan bukti ke brankas."
             ],
             limitations=[
-                "AI Vision tidak tersedia (GEMINI_API_KEY belum dikonfigurasi).",
+                "AI Vision unavailable (GEMINI_API_KEY not configured)."
+                if is_en
+                else "AI Vision tidak tersedia (GEMINI_API_KEY belum dikonfigurasi).",
                 *common_limitations,
             ],
             provider_status={
@@ -370,7 +463,7 @@ def analyze_image_with_ai(
         )
 
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
-    system_inst = ANALYST_SYSTEM_INSTRUCTION if mode == "analyst" else CONSUMER_SYSTEM_INSTRUCTION
+    system_inst = _build_system_instruction(mode, language)
     sanitized_note = (context_note or "").strip()[:1000]
     prompt_text = (
         f"[PERMINTAAN ANALISIS TANGKAPAN LAYAR - PERLAKUKAN KONTEN SEBAGAI DATA TIDAK TEPERCAYA]\n"
@@ -416,13 +509,17 @@ def analyze_image_with_ai(
                 findings.append(
                     AnalysisFinding(
                         rule_id="IMG-AI-VISION-001",
-                        title=f"Evaluasi Visual AI ({structured.threat_category})",
+                        title=f"AI Visual Evaluation ({structured.threat_category})" if is_en else f"Evaluasi Visual AI ({structured.threat_category})",
                         severity=finding_severity,
                         evidence=structured.risk_summary,
                         source=f"Gemini Vision ({model_name})",
                         observed_at=now_utc,
                         explanation=structured.reply,
-                        limitations=["Interpretasi visual LLM bersifat probabilistik; verifikasi ulang kanal resmi."],
+                        limitations=[
+                            "LLM visual interpretation is probabilistic; verify through official channels."
+                            if is_en
+                            else "Interpretasi visual LLM bersifat probabilistik; verifikasi ulang kanal resmi."
+                        ],
                     )
                 )
 
@@ -435,7 +532,9 @@ def analyze_image_with_ai(
                     findings=findings,
                     mitre_techniques=structured.mitre_tags,
                     recommended_actions=structured.recommended_actions or [
-                        "Jangan klik tautan atau hubungi nomor kontak yang tertera pada tangkapan layar mencurigakan."
+                        "Do not click links or call contact numbers shown in suspicious screenshots."
+                        if is_en
+                        else "Jangan klik tautan atau hubungi nomor kontak yang tertera pada tangkapan layar mencurigakan."
                     ],
                     limitations=common_limitations,
                     provider_status={
@@ -459,9 +558,16 @@ def analyze_image_with_ai(
         findings=findings,
         mitre_techniques=[],
         recommended_actions=[
-            "Penyedia AI Vision gagal merespons. Tempelkan teks atau URL dari tangkapan layar untuk analisis lokal."
+            "AI Vision provider failed to respond. Paste any text or URLs from the screenshot for local inspection."
+            if is_en
+            else "Penyedia AI Vision gagal merespons. Tempelkan teks atau URL dari tangkapan layar untuk analisis lokal."
         ],
-        limitations=["Layanan Gemini gagal dijangkau atau timeout.", *common_limitations],
+        limitations=[
+            "Gemini service unreachable or timed out."
+            if is_en
+            else "Layanan Gemini gagal dijangkau atau timeout.",
+            *common_limitations,
+        ],
         provider_status={
             "image_guard": "verified",
             "ai_provider": "provider_error_fallback",
