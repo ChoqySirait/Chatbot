@@ -111,9 +111,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({ onNavigate
         <button
           type="button"
           onClick={() => onNavigate('analyze')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 whitespace-nowrap"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition-colors whitespace-nowrap"
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-3.5 h-3.5" />
           <span>{t.overviewTab.goToAnalyze}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>

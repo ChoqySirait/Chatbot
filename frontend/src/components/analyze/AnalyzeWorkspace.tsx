@@ -9,7 +9,6 @@ import {
   Loader2,
   Shield,
   FolderPlus,
-  Sparkles,
   Link2,
   Upload,
   CheckCircle2,
@@ -66,13 +65,18 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
   const [notice, setNotice] = useState<string | null>(null);
 
   // Chat message history
+  const welcomeContent =
+    language === 'en'
+      ? "Hello! I'm the SecurAI triage assistant. Paste any suspicious link, scam SMS/WhatsApp message, or describe your security incident here."
+      : 'Halo! Saya asisten SecurAI. Anda dapat menempelkan tautan mencurigakan, pesan SMS/WhatsApp penipuan, atau menceritakan kendala keamanan yang sedang dihadapi.';
+
   const [messages, setMessages] = useState<
-    { role: 'user' | 'assistant'; content: string; canonical?: CanonicalAnalysisResult }[]
+    { id?: string; role: 'user' | 'assistant'; content: string; canonical?: CanonicalAnalysisResult }[]
   >(() => [
     {
+      id: 'welcome',
       role: 'assistant',
-      content:
-        'Halo! Saya asisten SecurAI. Anda dapat menempelkan tautan mencurigakan, pesan SMS/WhatsApp penipuan, atau menceritakan kendala keamanan yang sedang dihadapi.',
+      content: '',
     },
   ]);
 
@@ -135,11 +139,14 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     setLoading(true);
 
     try {
-      const historyPayload = messages.map((m) => ({ role: m.role, content: m.content }));
-      const res = await fetch('/api/chat', {
+      const historyPayload = messages.map((m) => ({
+        role: m.role,
+        content: m.id === 'welcome' ? welcomeContent : m.content,
+      }));
+      const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText, history: historyPayload, mode }),
+        body: JSON.stringify({ message: userText, history: historyPayload, mode, language }),
       });
 
       if (!res.ok) {
@@ -170,12 +177,19 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
         );
       }
     } catch (err) {
-      setError(`Gagal menghubungi server analisis: ${err}`);
+      setError(
+        language === 'en'
+          ? `Failed to reach analysis server: ${err}`
+          : `Gagal menghubungi server analisis: ${err}`
+      );
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: 'Maaf, terjadi kendala komunikasi dengan backend SecurAI. Pastikan server backend berjalan.',
+          content:
+            language === 'en'
+              ? 'Sorry, failed to communicate with the SecurAI backend. Please verify the server is running.'
+              : 'Maaf, terjadi kendala komunikasi dengan backend SecurAI. Pastikan server backend berjalan.',
         },
       ]);
     } finally {
@@ -213,7 +227,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       setCurrentEvidenceHash(computedHash);
       await persistHistory('url', targetUrl, data, computedHash);
     } catch (err) {
-      setError(`Gagal menganalisis URL: ${err}`);
+      setError(
+        language === 'en'
+          ? `Failed to analyze URL: ${err}`
+          : `Gagal menganalisis URL: ${err}`
+      );
     } finally {
       setLoading(false);
     }
@@ -249,7 +267,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       setCurrentEvidenceHash(computedHash);
       await persistHistory('message', text, data, computedHash);
     } catch (err) {
-      setError(`Gagal menganalisis pesan: ${err}`);
+      setError(
+        language === 'en'
+          ? `Failed to analyze message: ${err}`
+          : `Gagal menganalisis pesan: ${err}`
+      );
     } finally {
       setLoading(false);
     }
@@ -310,6 +332,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           context_note: screenshotNote.trim(),
           mode,
           external_ai_consent: externalAiConsent,
+          language,
         }),
       });
 
@@ -325,7 +348,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       setCurrentEvidenceHash(sha);
       await persistHistory('screenshot', screenshotName || 'Screenshot upload', data, sha);
     } catch (err) {
-      setError(`Gagal menganalisis tangkapan layar: ${err}`);
+      setError(
+        language === 'en'
+          ? `Failed to analyze screenshot: ${err}`
+          : `Gagal menganalisis tangkapan layar: ${err}`
+      );
     } finally {
       setLoading(false);
     }
@@ -354,7 +381,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           : `Inspeksi lokal selesai: ${file.name} (${outcome.detectedMagicType})`
       );
     } catch (err) {
-      setError(`Gagal memeriksa berkas lokal: ${err}`);
+      setError(
+        language === 'en'
+          ? `Failed to inspect local file: ${err}`
+          : `Gagal memeriksa berkas lokal: ${err}`
+      );
     } finally {
       setLoading(false);
     }
@@ -388,7 +419,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     });
 
     onVaultUpdated?.();
-    setNotice(`Artefak bukti tersimpan di Brankas dengan ID: ${evidenceId}`);
+    setNotice(
+      language === 'en'
+        ? `Evidence artifact saved to Vault with ID: ${evidenceId}`
+        : `Artefak bukti tersimpan di Brankas dengan ID: ${evidenceId}`
+    );
   };
 
   // Action: Open Case Link Modal
@@ -415,7 +450,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
 
     onVaultUpdated?.();
     setShowCaseModal(false);
-    setNotice(`Temuan berhasil dilampirkan ke kasus ${selectedCaseId}`);
+    setNotice(
+      language === 'en'
+        ? `Finding attached to case ${selectedCaseId}`
+        : `Temuan berhasil dilampirkan ke kasus ${selectedCaseId}`
+    );
   };
 
   return (
@@ -428,12 +467,12 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
             onClick={() => setActiveSubTab('chat')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeSubTab === 'chat'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Chat Triage AI</span>
+            <span>{language === 'en' ? 'AI Chat Triage' : 'Chat Triage AI'}</span>
           </button>
 
           <button
@@ -441,12 +480,12 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
             onClick={() => setActiveSubTab('url')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeSubTab === 'url'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
-            <span>Inspeksi URL</span>
+            <span>{language === 'en' ? 'URL Inspect' : 'Inspeksi URL'}</span>
           </button>
 
           <button
@@ -454,12 +493,12 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
             onClick={() => setActiveSubTab('message')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeSubTab === 'message'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Deteksi Pesan</span>
+            <span>{language === 'en' ? 'Message Check' : 'Deteksi Pesan'}</span>
           </button>
 
           <button
@@ -467,8 +506,8 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
             onClick={() => setActiveSubTab('screenshot')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeSubTab === 'screenshot'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <ImageIcon className="w-3.5 h-3.5" />
@@ -480,8 +519,8 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
             onClick={() => setActiveSubTab('file')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeSubTab === 'file'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
@@ -534,12 +573,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           {activeSubTab === 'chat' && (
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col h-[560px] overflow-hidden">
               <div className="p-3.5 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Interactive Incident Triage Assistant</span>
+                <span className="text-xs font-semibold text-slate-300">
+                  {language === 'en' ? 'Incident Triage Chat' : 'Asisten Triage Insiden'}
                 </span>
-                <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800/60">
-                  {mode === 'analyst' ? 'SOC Analyst' : 'Consumer'}
+                <span className="text-[11px] font-mono text-slate-400">
+                  {mode === 'analyst' ? t.modes.analyst : t.modes.consumer}
                 </span>
               </div>
 
@@ -552,11 +590,13 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                     <div
                       className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${
                         m.role === 'user'
-                          ? 'bg-cyan-600 text-white rounded-br-none shadow-md shadow-cyan-600/20'
+                          ? 'bg-cyan-600 text-white rounded-br-none'
                           : 'bg-slate-800/80 text-slate-200 border border-slate-700/60 rounded-bl-none'
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{m.content}</p>
+                      <p className="whitespace-pre-wrap">
+                        {m.id === 'welcome' ? welcomeContent : m.content}
+                      </p>
 
                       {m.canonical && (
                         <div className="mt-2 pt-2 border-t border-slate-700/60 flex items-center justify-between gap-2 text-[10px] font-mono">
@@ -566,7 +606,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                             onClick={() => setCurrentResult(m.canonical || null)}
                             className="underline hover:text-white"
                           >
-                            Buka Detail Forensik
+                            {language === 'en' ? 'Open Forensic Details' : 'Buka Detail Forensik'}
                           </button>
                         </div>
                       )}
@@ -576,7 +616,9 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                 {loading && (
                   <div className="flex items-center gap-2 text-xs text-slate-400 p-2 font-mono">
                     <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-                    <span>Menganalisis indikator keamanan...</span>
+                    <span>
+                      {language === 'en' ? 'Analyzing security indicators...' : 'Menganalisis indikator keamanan...'}
+                    </span>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -587,7 +629,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ketik pertanyaan atau tempel teks penipuan..."
+                  placeholder={
+                    language === 'en'
+                      ? 'Ask a security question or paste suspicious text...'
+                      : 'Ketik pertanyaan atau tempel teks penipuan...'
+                  }
                   className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 />
                 <button
@@ -607,22 +653,26 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
               <div>
                 <h3 className="font-bold text-white text-sm flex items-center gap-2">
                   <Globe className="w-4 h-4 text-cyan-400" />
-                  <span>Inspeksi Tautan URL Mendalam</span>
+                  <span>{language === 'en' ? 'Deep URL Inspection' : 'Inspeksi Tautan URL Mendalam'}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Menganalisis SSL, DNS A/AAAA, SSRF pre-check, Brand Impersonation, dan Redirect Chain.
+                  {language === 'en'
+                    ? 'Inspects SSL, DNS A/AAAA, SSRF guards, brand impersonation, and redirect chains.'
+                    : 'Menganalisis SSL, DNS A/AAAA, SSRF pre-check, Brand Impersonation, dan Redirect Chain.'}
                 </p>
               </div>
 
               <form onSubmit={handleAnalyzeUrl} className="space-y-3">
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1 font-medium">Tautan Sasaran (URL)</label>
+                  <label className="block text-slate-400 text-xs mb-1 font-medium">
+                    {language === 'en' ? 'Target URL' : 'Tautan Sasaran (URL)'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
-                    placeholder="https://contoh-domain-login.com"
+                    placeholder="https://example-login-check.com"
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -630,7 +680,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                  className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                 >
                   {loading ? (
                     <>
@@ -654,22 +704,34 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
               <div>
                 <h3 className="font-bold text-white text-sm flex items-center gap-2">
                   <Search className="w-4 h-4 text-cyan-400" />
-                  <span>Deteksi Rekayasa Sosial Pesan Teks</span>
+                  <span>
+                    {language === 'en'
+                      ? 'Text Social Engineering Detector'
+                      : 'Deteksi Rekayasa Sosial Pesan Teks'}
+                  </span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Evaluasi kata kunci desakan psikologis, ancaman pemblokiran rekening, dan pola penipuan SMS/WA.
+                  {language === 'en'
+                    ? 'Evaluates urgency pressure tactics, fake account-block threats, and SMS/WhatsApp scam cues.'
+                    : 'Evaluasi kata kunci desakan psikologis, ancaman pemblokiran rekening, dan pola penipuan SMS/WA.'}
                 </p>
               </div>
 
               <form onSubmit={handleAnalyzeMessage} className="space-y-3">
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1 font-medium">Teks Pesan</label>
+                  <label className="block text-slate-400 text-xs mb-1 font-medium">
+                    {language === 'en' ? 'Message Content' : 'Teks Pesan'}
+                  </label>
                   <textarea
                     rows={6}
                     required
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder="Tempel pesan SMS atau WhatsApp yang Anda terima..."
+                    placeholder={
+                      language === 'en'
+                        ? 'Paste suspicious SMS or WhatsApp message here...'
+                        : 'Tempel pesan SMS atau WhatsApp yang Anda terima...'
+                    }
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -677,7 +739,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                  className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                 >
                   {loading ? (
                     <>
@@ -771,7 +833,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                 <button
                   type="submit"
                   disabled={!screenshotDataUrl || loading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-500/20 disabled:opacity-50 transition-all"
+                  className="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                 >
                   {loading ? (
                     <>
@@ -825,23 +887,35 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
 
               <div className="space-y-3 pt-2 border-t border-slate-800">
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1 font-medium">Nama Artefak</label>
+                  <label className="block text-slate-400 text-xs mb-1 font-medium">
+                    {language === 'en' ? 'Artifact Name' : 'Nama Artefak'}
+                  </label>
                   <input
                     type="text"
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
-                    placeholder="misal: Surat_Tagihan_Palsu.pdf atau Pesan_WhatsApp.txt"
+                    placeholder={
+                      language === 'en'
+                        ? 'e.g. Fake_Invoice.pdf or WhatsApp_Message.txt'
+                        : 'misal: Surat_Tagihan_Palsu.pdf atau Pesan_WhatsApp.txt'
+                    }
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1 font-medium">Isi / Metadata Artefak (Teks)</label>
+                  <label className="block text-slate-400 text-xs mb-1 font-medium">
+                    {language === 'en' ? 'Artifact Content / Metadata (Text)' : 'Isi / Metadata Artefak (Teks)'}
+                  </label>
                   <textarea
                     rows={4}
                     value={fileHashInput}
                     onChange={(e) => setFileHashInput(e.target.value)}
-                    placeholder="Tempel konten teks atau lihat ringkasan metadata berkas..."
+                    placeholder={
+                      language === 'en'
+                        ? 'Paste text content or review computed binary metadata summary...'
+                        : 'Tempel konten teks atau lihat ringkasan metadata berkas...'
+                    }
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -852,11 +926,15 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                     if (!fileHashInput) return;
                     const hash = await computeClientSha256(fileHashInput);
                     setCurrentEvidenceHash(hash);
-                    setNotice(`Hash SHA-256 teks dihitung: ${hash}`);
+                    setNotice(
+                      language === 'en'
+                        ? `Computed text SHA-256: ${hash}`
+                        : `Hash SHA-256 teks dihitung: ${hash}`
+                    );
                   }}
                   className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
                 >
-                  Hitung SHA-256 Teks
+                  {language === 'en' ? 'Compute Text SHA-256' : 'Hitung SHA-256 Teks'}
                 </button>
               </div>
             </div>
@@ -883,10 +961,14 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
             )
           ) : (
             <div className="h-full min-h-[400px] flex flex-col items-center justify-center bg-slate-900/30 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
-              <Shield className="w-12 h-12 stroke-[1.2] mb-3 text-slate-600" />
-              <p className="text-sm font-medium text-slate-400">Hasil Analisis Siap Ditampilkan</p>
-              <p className="text-xs text-slate-600 mt-1 max-w-sm">
-                Kirim pesan pada chat triage atau lakukan inspeksi URL, Pesan, Tangkapan Layar, maupun Berkas Lokal di kolom kiri.
+              <Shield className="w-10 h-10 stroke-[1.2] mb-3 text-slate-600" />
+              <p className="text-sm font-medium text-slate-400">
+                {language === 'en' ? 'Analysis Results Ready' : 'Hasil Analisis Siap Ditampilkan'}
+              </p>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                {language === 'en'
+                  ? 'Send a chat triage prompt or inspect a URL, Message, Screenshot, or Local File in the left panel.'
+                  : 'Kirim pesan pada chat triage atau lakukan inspeksi URL, Pesan, Tangkapan Layar, maupun Berkas Lokal di kolom kiri.'}
               </p>
             </div>
           )}
@@ -899,17 +981,27 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <h3 className="font-bold text-white text-sm flex items-center gap-2">
               <FolderPlus className="w-4 h-4 text-cyan-400" />
-              <span>Lampirkan ke Kasus Insiden</span>
+              <span>{language === 'en' ? 'Attach to Incident Case' : 'Lampirkan ke Kasus Insiden'}</span>
             </h3>
 
             {casesList.length === 0 ? (
               <div className="text-xs text-slate-400">
-                Belum ada kasus insiden. Silakan buat kasus baru di tab <strong>Kasus Insiden</strong> terlebih dahulu.
+                {language === 'en' ? (
+                  <>
+                    No incident cases yet. Please create a case in the <strong>{t.nav.incidents}</strong> tab first.
+                  </>
+                ) : (
+                  <>
+                    Belum ada kasus insiden. Silakan buat kasus baru di tab <strong>{t.nav.incidents}</strong> terlebih dahulu.
+                  </>
+                )}
               </div>
             ) : (
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-400 mb-1">Pilih Kasus</label>
+                  <label className="block text-slate-400 mb-1">
+                    {language === 'en' ? 'Select Case' : 'Pilih Kasus'}
+                  </label>
                   <select
                     value={selectedCaseId}
                     onChange={(e) => setSelectedCaseId(e.target.value)}
@@ -931,7 +1023,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                 onClick={() => setShowCaseModal(false)}
                 className="px-3 py-1.5 bg-slate-800 text-slate-300 text-xs rounded-lg"
               >
-                Batal
+                {t.common.cancel}
               </button>
               {casesList.length > 0 && (
                 <button
@@ -939,7 +1031,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                   onClick={handleLinkToCase}
                   className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-lg"
                 >
-                  Lampirkan
+                  {language === 'en' ? 'Attach' : 'Lampirkan'}
                 </button>
               )}
             </div>

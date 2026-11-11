@@ -15,7 +15,7 @@ import type { IncidentCase, IncidentTimelineEvent, SeverityLevel } from '../../t
 import { useLanguage } from '../../context/useLanguage';
 
 export const IncidentManager: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [cases, setCases] = useState<IncidentCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<IncidentCase | null>(null);
   const [timelineEvents, setTimelineEvents] = useState<IncidentTimelineEvent[]>([]);
@@ -216,10 +216,10 @@ export const IncidentManager: React.FC = () => {
       try {
         const text = event.target?.result as string;
         const importedId = await importIncidentCasePackage(text);
-        alert(`Berhasil mengimpor kasus: ${importedId}`);
+        alert(language === 'en' ? `Imported case: ${importedId}` : `Berhasil mengimpor kasus: ${importedId}`);
         await loadCases();
       } catch (err) {
-        alert(`Impor gagal: ${err}`);
+        alert(language === 'en' ? `Import failed: ${err}` : `Impor gagal: ${err}`);
       }
     };
     reader.readAsText(file);
@@ -422,14 +422,16 @@ export const IncidentManager: React.FC = () => {
                     type="text"
                     value={eventAction}
                     onChange={(e) => setEventAction(e.target.value)}
-                    placeholder="Aksi/Tahapan (misal: Menghubungi Bank)"
+                    placeholder={
+                      language === 'en' ? 'Action (e.g. Contacted Bank)' : 'Aksi/Tahapan (misal: Menghubungi Bank)'
+                    }
                     className="flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   />
                   <input
                     type="text"
                     value={eventDesc}
                     onChange={(e) => setEventDesc(e.target.value)}
-                    placeholder="Keterangan singkat..."
+                    placeholder={language === 'en' ? 'Short notes...' : 'Keterangan singkat...'}
                     className="flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   />
                   <button
@@ -437,7 +439,7 @@ export const IncidentManager: React.FC = () => {
                     className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Catat</span>
+                    <span>{language === 'en' ? 'Add' : 'Catat'}</span>
                   </button>
                 </form>
               </div>
@@ -453,24 +455,32 @@ export const IncidentManager: React.FC = () => {
                     onClick={handleSaveNotes}
                     className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
                   >
-                    Simpan Catatan
+                    {language === 'en' ? 'Save Notes' : 'Simpan Catatan'}
                   </button>
                 </div>
                 <textarea
                   rows={4}
                   value={caseNotes}
                   onChange={(e) => setCaseNotes(e.target.value)}
-                  placeholder="Tuliskan catatan teknis analisis, nomor rekening penipu, nomor tiket aduan bank, dll..."
+                  placeholder={
+                    language === 'en'
+                      ? 'Record analysis notes, scammer account identifiers, bank ticket reference...'
+                      : 'Tuliskan catatan teknis analisis, nomor rekening penipu, nomor tiket aduan bank, dll...'
+                  }
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs sm:text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500 font-mono"
                 />
               </div>
             </div>
           ) : (
             <div className="h-full min-h-[300px] flex flex-col items-center justify-center bg-slate-900/30 border border-slate-800/80 rounded-2xl p-8 text-center text-slate-500">
-              <FolderPlus className="w-12 h-12 stroke-[1.5] mb-2 text-slate-600" />
-              <p className="text-sm font-medium text-slate-400">Pilih kasus untuk melihat detail</p>
+              <FolderPlus className="w-10 h-10 stroke-[1.4] mb-2 text-slate-600" />
+              <p className="text-sm font-medium text-slate-400">
+                {language === 'en' ? 'Select a case to view details' : 'Pilih kasus untuk melihat detail'}
+              </p>
               <p className="text-xs text-slate-600 mt-1 max-w-sm">
-                Catatan kronologi, bukti forensik, dan nomor tiket akan ditampilkan di sini.
+                {language === 'en'
+                  ? 'Incident timelines, SHA-256 artifacts, and dispute notes appear here.'
+                  : 'Catatan kronologi, bukti forensik, dan nomor tiket akan ditampilkan di sini.'}
               </p>
             </div>
           )}
@@ -497,67 +507,77 @@ export const IncidentManager: React.FC = () => {
 
             <form onSubmit={handleCreateCase} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Judul Kasus *</label>
+                <label className="block text-slate-400 font-medium mb-1">
+                  {t.incidentsTab.caseTitle} *
+                </label>
                 <input
                   type="text"
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Misal: Phishing SMS Penipuan Rekening BCA Palsu"
+                  placeholder={
+                    language === 'en'
+                      ? 'e.g. Spoofed Bank SMS Phishing Incident'
+                      : 'Misal: Phishing SMS Penipuan Rekening BCA Palsu'
+                  }
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Kategori Insiden</label>
+                  <label className="block text-slate-400 font-medium mb-1">
+                    {language === 'en' ? 'Incident Category' : 'Kategori Insiden'}
+                  </label>
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value as IncidentCase['incidentType'])}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                   >
                     <option value="phishing">Phishing Link / SMS</option>
-                    <option value="financial_fraud">Penipuan Finansial</option>
-                    <option value="apk_scam">Penyebaran File APK Scam</option>
-                    <option value="account_takeover">Pengambilalihan Akun (ATO)</option>
-                    <option value="malvertising">Malvertising Ilegal</option>
-                    <option value="other">Lainnya</option>
+                    <option value="financial_fraud">{language === 'en' ? 'Financial Fraud' : 'Penipuan Finansial'}</option>
+                    <option value="apk_scam">{language === 'en' ? 'Malicious APK Scam' : 'Penyebaran File APK Scam'}</option>
+                    <option value="account_takeover">{language === 'en' ? 'Account Takeover (ATO)' : 'Pengambilalihan Akun (ATO)'}</option>
+                    <option value="malvertising">{language === 'en' ? 'Illegal Malvertising' : 'Malvertising Ilegal'}</option>
+                    <option value="other">{language === 'en' ? 'Other' : 'Lainnya'}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-medium mb-1">Keparahan</label>
+                  <label className="block text-slate-400 font-medium mb-1">{t.incidentsTab.caseSeverity}</label>
                   <select
                     value={newSeverity}
                     onChange={(e) => setNewSeverity(e.target.value as SeverityLevel)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                   >
-                    <option value="low">Rendah (Low)</option>
-                    <option value="medium">Menengah (Medium)</option>
-                    <option value="high">Tinggi (High)</option>
-                    <option value="critical">Kritis (Critical)</option>
+                    <option value="low">{t.severity.low}</option>
+                    <option value="medium">{t.severity.medium}</option>
+                    <option value="high">{t.severity.high}</option>
+                    <option value="critical">{t.severity.critical}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Pelapor / Korban</label>
+                <label className="block text-slate-400 font-medium mb-1">{t.incidentsTab.caseReporter}</label>
                 <input
                   type="text"
                   value={newReporter}
                   onChange={(e) => setNewReporter(e.target.value)}
-                  placeholder="Nama pelapor atau 'Saya'"
+                  placeholder={language === 'en' ? "Reporter name or 'Self'" : "Nama pelapor atau 'Saya'"}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-400 font-medium mb-1">Keterangan / Kronologi Singkat</label>
+                <label className="block text-slate-400 font-medium mb-1">
+                  {language === 'en' ? 'Summary / Brief Chronology' : 'Keterangan / Kronologi Singkat'}
+                </label>
                 <textarea
                   rows={3}
                   value={newSummary}
                   onChange={(e) => setNewSummary(e.target.value)}
-                  placeholder="Jelaskan ringkasan apa yang terjadi..."
+                  placeholder={language === 'en' ? 'Summarize what happened...' : 'Jelaskan ringkasan apa yang terjadi...'}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                 />
               </div>
@@ -568,13 +588,13 @@ export const IncidentManager: React.FC = () => {
                   onClick={() => setShowNewModal(false)}
                   className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg"
                 >
-                  Batal
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg shadow-md shadow-cyan-500/20"
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg"
                 >
-                  Simpan Kasus Baru
+                  {language === 'en' ? 'Create Case' : 'Simpan Kasus Baru'}
                 </button>
               </div>
             </form>

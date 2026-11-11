@@ -28,7 +28,7 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
   onSaveEvidence,
   onLinkCase,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showJson, setShowJson] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedHash, setCopiedHash] = useState(false);
@@ -114,16 +114,16 @@ export const AnalystView: React.FC<AnalystViewProps> = ({
               className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-colors"
             >
               <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Simpan Bukti (SHA-256)</span>
+              <span>{language === 'en' ? 'Save Evidence (SHA-256)' : 'Simpan Bukti (SHA-256)'}</span>
             </button>
 
             <button
               type="button"
               onClick={onLinkCase}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-900/50 hover:bg-purple-800/60 text-purple-200 text-xs font-medium border border-purple-700/60 transition-colors"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-medium border border-slate-700 transition-colors"
             >
               <FolderPlus className="w-3.5 h-3.5" />
-              <span>Lampirkan ke Kasus</span>
+              <span>{language === 'en' ? 'Attach to Case' : 'Lampirkan ke Kasus'}</span>
             </button>
           </div>
         </div>

@@ -212,7 +212,7 @@ export const ThreatIntelExplorer: React.FC = () => {
                     ? 'bg-amber-950 text-amber-300 border border-amber-800'
                     : 'bg-slate-800 text-slate-300'
                 }`}>
-                  Keparahan: {selectedTech.severity}
+                  {isId ? 'Keparahan' : 'Severity'}: {selectedTech.severity}
                 </span>
               </div>
               <h3 className="text-base font-bold text-white">{selectedTech.name}</h3>
@@ -222,7 +222,7 @@ export const ThreatIntelExplorer: React.FC = () => {
             {/* Description */}
             <div className="space-y-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Deskripsi Ancaman
+                {isId ? 'Deskripsi Ancaman' : 'Threat Description'}
               </span>
               <p className="text-xs text-slate-300 leading-relaxed">
                 {isId ? selectedTech.descriptionId : selectedTech.descriptionEn}
@@ -275,7 +275,7 @@ export const ThreatIntelExplorer: React.FC = () => {
                 rel="noreferrer"
                 className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
               >
-                <span>Lihat Referensi MITRE ATT&CK Resmi</span>
+                <span>{isId ? 'Lihat Referensi MITRE ATT&CK Resmi' : 'View Official MITRE ATT&CK Reference'}</span>
                 <ExternalLink className="w-3 h-3 text-cyan-400" />
               </a>
             </div>

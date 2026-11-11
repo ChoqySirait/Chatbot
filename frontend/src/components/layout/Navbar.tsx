@@ -48,9 +48,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-16 z-40">
+    <nav className="border-b border-slate-800/80 bg-[#0b1120]/80 backdrop-blur sticky top-14 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-nowrap lg:flex-wrap items-center gap-1 sm:gap-1.5 overflow-x-auto py-2 no-scrollbar">
+        <div className="flex flex-nowrap lg:flex-wrap items-center gap-1 overflow-x-auto no-scrollbar">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -59,17 +59,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-2.5 border-b-2 text-xs font-medium whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent'
+                    ? 'border-cyan-400 text-white'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
                 <span>{item.label}</span>
                 {item.count !== undefined && item.count > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-slate-800 text-cyan-300 border border-cyan-900/50">
-                    {item.count}
+                  <span className="ml-0.5 text-[11px] font-mono tabular-nums text-slate-400">
+                    ({item.count})
                   </span>
                 )}
               </button>

@@ -227,12 +227,12 @@ __________________________
             onClick={() => setActiveTab('dispute')}
             className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
               activeTab === 'dispute'
-                ? 'bg-cyan-600 text-white shadow-sm'
+                ? 'bg-cyan-600 text-white'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <FileCheck className="w-3.5 h-3.5" />
-            <span>Surat Sanggahan Bank</span>
+            <span>{language === 'en' ? 'Bank Dispute Letter' : 'Surat Sanggahan Bank'}</span>
           </button>
 
           <button
@@ -240,12 +240,12 @@ __________________________
             onClick={() => setActiveTab('dossier')}
             className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
               activeTab === 'dossier'
-                ? 'bg-purple-600 text-white shadow-sm'
+                ? 'bg-indigo-600 text-white'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <FileCode className="w-3.5 h-3.5" />
-            <span>Dosir Forensik Insiden (.MD/JSON)</span>
+            <span>{language === 'en' ? 'Forensic Dossier (.MD/JSON)' : 'Dosir Forensik Insiden (.MD/JSON)'}</span>
           </button>
         </div>
       </div>
@@ -266,7 +266,7 @@ __________________________
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition-colors"
             >
               <Printer className="w-4 h-4" />
               <span>{t.reportsTab.btnPrintReport}</span>
@@ -276,7 +276,7 @@ __________________________
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Parameter Surat Sanggahan
+                {language === 'en' ? 'Dispute Letter Parameters' : 'Parameter Surat Sanggahan'}
               </h3>
 
               <div className="space-y-3 text-xs">
@@ -321,7 +321,7 @@ __________________________
                       type="text"
                       value={victimName}
                       onChange={(e) => setVictimName(e.target.value)}
-                      placeholder="Nama Korban"
+                      placeholder={language === 'en' ? 'Full name' : 'Nama Korban'}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                     />
                   </div>
@@ -344,18 +344,24 @@ __________________________
                     type="text"
                     value={scammerAccount}
                     onChange={(e) => setScammerAccount(e.target.value)}
-                    placeholder="Nomor rekening penipu atau nomor WhatsApp"
+                    placeholder={language === 'en' ? 'Perpetrator account or phone handle' : 'Nomor rekening penipu atau nomor WhatsApp'}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 mb-1">Kronologi Ringkas Kejadian</label>
+                  <label className="block text-slate-400 mb-1">
+                    {language === 'en' ? 'Brief Incident Chronology' : 'Kronologi Ringkas Kejadian'}
+                  </label>
                   <textarea
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Tuliskan bagaimana Anda diarahkan ke tautan palsu..."
+                    placeholder={
+                      language === 'en'
+                        ? 'Describe how you were directed to the fraudulent link or transfer...'
+                        : 'Tuliskan bagaimana Anda diarahkan ke tautan palsu...'
+                    }
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -365,7 +371,11 @@ __________________________
             <div className="lg:col-span-7 bg-white text-slate-900 rounded-2xl p-8 shadow-xl font-serif text-xs leading-relaxed border border-slate-300 print:border-none print:shadow-none print:p-0">
               <div className="border-b-2 border-slate-900 pb-3 mb-4 text-center">
                 <div className="font-bold tracking-widest text-sm uppercase">SecurAI Dispute Notice</div>
-                <div className="text-[10px] text-slate-600 font-sans">Dokumen Resmi Sanggahan Transaksi & Bantuan Nasabah</div>
+                <div className="text-[10px] text-slate-600 font-sans">
+                  {language === 'en'
+                    ? 'Customer Transaction Dispute & Incident Support Draft'
+                    : 'Dokumen Resmi Sanggahan Transaksi & Bantuan Nasabah'}
+                </div>
               </div>
 
               <pre className="whitespace-pre-wrap font-serif text-slate-800 leading-normal select-all">
@@ -374,7 +384,11 @@ __________________________
 
               <div className="mt-8 pt-4 border-t border-slate-300 text-[10px] text-slate-500 font-sans flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
-                <span>Dokumen dicetak secara mandiri. Segel bukti digital disimpan di brankas perangkat.</span>
+                <span>
+                  {language === 'en'
+                    ? 'Self-generated notice. Cryptographic evidence seals remain stored locally on your device.'
+                    : 'Dokumen dicetak secara mandiri. Segel bukti digital disimpan di brankas perangkat.'}
+                </span>
               </div>
             </div>
           </div>
@@ -386,15 +400,19 @@ __________________________
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <FolderGit2 className="w-4 h-4 text-purple-400 shrink-0" />
-              <label className="text-xs text-slate-300 font-semibold shrink-0">Pilih Kasus Insiden:</label>
+              <FolderGit2 className="w-4 h-4 text-indigo-400 shrink-0" />
+              <label className="text-xs text-slate-300 font-semibold shrink-0">
+                {language === 'en' ? 'Select Incident Case:' : 'Pilih Kasus Insiden:'}
+              </label>
               {cases.length === 0 ? (
-                <span className="text-xs text-slate-500 italic">Belum ada kasus insiden tersimpan</span>
+                <span className="text-xs text-slate-500 italic">
+                  {language === 'en' ? 'No saved incident cases yet' : 'Belum ada kasus insiden tersimpan'}
+                </span>
               ) : (
                 <select
                   value={selectedCaseId}
                   onChange={(e) => setSelectedCaseId(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-purple-500"
+                  className="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyan-500"
                 >
                   {cases.map((c) => (
                     <option key={c.caseId} value={c.caseId}>
@@ -412,17 +430,17 @@ __________________________
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>Salin Teks</span>
+                <span>{copied ? t.common.copied : t.common.copy}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleDownloadMarkdown}
                 disabled={!activeDossierMarkdown}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-md disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold disabled:opacity-50"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Unduh Markdown (.MD)</span>
+                <span>{language === 'en' ? 'Download Markdown (.MD)' : 'Unduh Markdown (.MD)'}</span>
               </button>
 
               <button
@@ -432,7 +450,7 @@ __________________________
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 disabled:opacity-50"
               >
                 <FileCode className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Unduh JSON</span>
+                <span>{language === 'en' ? 'Download JSON' : 'Unduh JSON'}</span>
               </button>
             </div>
           </div>
@@ -440,14 +458,18 @@ __________________________
           {/* Markdown Dossier Preview */}
           <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto max-h-[700px] overflow-y-auto">
             {loadingDossier ? (
-              <div className="text-center py-12 text-slate-500 text-xs">Menyusun dosir forensik...</div>
+              <div className="text-center py-12 text-slate-500 text-xs">
+                {language === 'en' ? 'Compiling forensic dossier...' : 'Menyusun dosir forensik...'}
+              </div>
             ) : activeDossierMarkdown ? (
               <pre className="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed select-all">
                 {activeDossierMarkdown}
               </pre>
             ) : (
               <div className="text-center py-12 text-slate-500 text-xs">
-                Pilih atau buat kasus di tab <strong>Kasus Insiden</strong> terlebih dahulu untuk mengekspor dosir forensik.
+                {language === 'en'
+                  ? 'Select or create a case in Incident Cases first to export a forensic dossier.'
+                  : 'Pilih atau buat kasus di tab Kasus Insiden terlebih dahulu untuk mengekspor dosir forensik.'}
               </div>
             )}
           </div>

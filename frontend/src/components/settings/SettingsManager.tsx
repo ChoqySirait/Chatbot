@@ -13,7 +13,7 @@ import { db, purgeAllLocalVault } from '../../db';
 import { useLanguage } from '../../context/useLanguage';
 
 export const SettingsManager: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [incidentCount, setIncidentCount] = useState(0);
   const [evidenceCount, setEvidenceCount] = useState(0);
   const [historyCount, setHistoryCount] = useState(0);
@@ -149,17 +149,21 @@ export const SettingsManager: React.FC = () => {
         <div className="grid grid-cols-3 gap-3 pt-2">
           <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-center">
             <span className="text-xl font-bold font-mono text-cyan-400">{incidentCount}</span>
-            <span className="block text-[11px] text-slate-400 mt-0.5">Kasus Insiden</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">{t.nav.incidents}</span>
           </div>
 
           <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-center">
             <span className="text-xl font-bold font-mono text-purple-400">{evidenceCount}</span>
-            <span className="block text-[11px] text-slate-400 mt-0.5">Artefak Bukti</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">
+              {language === 'en' ? 'Evidence Artifacts' : 'Artefak Bukti'}
+            </span>
           </div>
 
           <div className="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800 text-center">
             <span className="text-xl font-bold font-mono text-blue-400">{historyCount}</span>
-            <span className="block text-[11px] text-slate-400 mt-0.5">Riwayat Analisis</span>
+            <span className="block text-[11px] text-slate-400 mt-0.5">
+              {language === 'en' ? 'Analysis History' : 'Riwayat Analisis'}
+            </span>
           </div>
         </div>
 
@@ -171,7 +175,9 @@ export const SettingsManager: React.FC = () => {
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
           >
             <Download className="w-4 h-4 text-cyan-400" />
-            <span>Unduh Cadangan Lengkap (.JSON)</span>
+            <span>
+              {language === 'en' ? 'Download Full Backup (.JSON)' : 'Unduh Cadangan Lengkap (.JSON)'}
+            </span>
           </button>
 
           <button

@@ -22,7 +22,7 @@ export const ConsumerView: React.FC<ConsumerViewProps> = ({
   onSaveEvidence,
   onDraftDispute,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const getClassificationBadge = (classification: ClassificationType) => {
     switch (classification) {
@@ -31,28 +31,40 @@ export const ConsumerView: React.FC<ConsumerViewProps> = ({
           bg: 'bg-emerald-950/70 border-emerald-700/60 text-emerald-300',
           icon: <ShieldCheck className="w-5 h-5 text-emerald-400" />,
           title: t.status.no_major_indicator,
-          desc: 'Pemeriksaan otomatis tidak mendeteksi pola phishing atau domain tiruan berbahaya.',
+          desc:
+            language === 'en'
+              ? 'Automated checks detected no phishing patterns or spoofed brand domains.'
+              : 'Pemeriksaan otomatis tidak mendeteksi pola phishing atau domain tiruan berbahaya.',
         };
       case 'needs_caution':
         return {
           bg: 'bg-amber-950/70 border-amber-700/60 text-amber-300',
           icon: <AlertTriangle className="w-5 h-5 text-amber-400" />,
           title: t.status.needs_caution,
-          desc: 'Terdapat unsur mencurigakan seperti domain baru terdaftar atau taktik desakan pesan.',
+          desc:
+            language === 'en'
+              ? 'Suspicious elements detected, such as newly registered domains or urgent social-engineering cues.'
+              : 'Terdapat unsur mencurigakan seperti domain baru terdaftar atau taktik desakan pesan.',
         };
       case 'high_risk':
         return {
           bg: 'bg-rose-950/70 border-rose-700/60 text-rose-300',
           icon: <ShieldAlert className="w-5 h-5 text-rose-400" />,
           title: t.status.high_risk,
-          desc: 'Bahaya Tinggi! Terdeteksi indikasi kuat phishing, peniruan merek resmi, atau rekayasa sosial.',
+          desc:
+            language === 'en'
+              ? 'High Risk! Strong indicators of phishing, brand impersonation, or social engineering detected.'
+              : 'Bahaya Tinggi! Terdeteksi indikasi kuat phishing, peniruan merek resmi, atau rekayasa sosial.',
         };
       default:
         return {
           bg: 'bg-slate-900 border-slate-700 text-slate-300',
           icon: <HelpCircle className="w-5 h-5 text-slate-400" />,
           title: t.status.inconclusive,
-          desc: 'Data tidak mencukupi untuk menarik kesimpulan pasti.',
+          desc:
+            language === 'en'
+              ? 'Insufficient telemetry to draw a conclusive classification.'
+              : 'Data tidak mencukupi untuk menarik kesimpulan pasti.',
         };
     }
   };
@@ -62,7 +74,7 @@ export const ConsumerView: React.FC<ConsumerViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Consumer Headline Risk Card */}
-      <div className={`p-6 rounded-2xl border ${badge.bg} space-y-3 shadow-lg`}>
+      <div className={`p-6 rounded-2xl border ${badge.bg} space-y-3`}>
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-black/30 backdrop-blur">
             {badge.icon}
@@ -79,7 +91,7 @@ export const ConsumerView: React.FC<ConsumerViewProps> = ({
             <button
               type="button"
               onClick={onDraftDispute}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors"
             >
               <FileText className="w-4 h-4" />
               <span>{t.analyzeTab.btnGenerateDispute}</span>
@@ -92,7 +104,7 @@ export const ConsumerView: React.FC<ConsumerViewProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-white text-xs font-medium border border-white/20 transition-colors"
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>Simpan Bukti (SHA-256)</span>
+            <span>{language === 'en' ? 'Save Evidence (SHA-256)' : 'Simpan Bukti (SHA-256)'}</span>
           </button>
         </div>
       </div>

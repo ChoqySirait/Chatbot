@@ -16,7 +16,7 @@ import type { EvidenceItem } from '../../types/api';
 import { useLanguage } from '../../context/useLanguage';
 
 export const EvidenceVault: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [evidenceList, setEvidenceList] = useState<EvidenceItem[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<Record<string, 'valid' | 'tampered' | null>>({});
@@ -148,10 +148,10 @@ export const EvidenceVault: React.FC = () => {
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>
                         {status === 'valid'
-                          ? 'Terverifikasi Utuh'
+                          ? (language === 'en' ? 'Verified Intact' : 'Terverifikasi Utuh')
                           : status === 'tampered'
-                          ? 'Integritas Tidak Cocok'
-                          : 'Verifikasi SHA-256'}
+                          ? (language === 'en' ? 'Integrity Mismatch' : 'Integritas Tidak Cocok')
+                          : (language === 'en' ? 'Verify SHA-256' : 'Verifikasi SHA-256')}
                       </span>
                     </button>
 
@@ -159,7 +159,7 @@ export const EvidenceVault: React.FC = () => {
                       type="button"
                       onClick={() => item.id && handleDelete(item.id)}
                       className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-slate-400 hover:text-rose-300 border border-slate-700"
-                      title="Hapus Bukti"
+                      title={language === 'en' ? 'Delete Evidence' : 'Hapus Bukti'}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -169,7 +169,7 @@ export const EvidenceVault: React.FC = () => {
                 {/* Content Preview */}
                 <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
                   <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                    Isi Cuplikan Artefak
+                    {language === 'en' ? 'Artifact Preview' : 'Isi Cuplikan Artefak'}
                   </div>
                   <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap break-all max-h-24 overflow-y-auto">
                     {item.contentPreview}
@@ -180,7 +180,7 @@ export const EvidenceVault: React.FC = () => {
                 <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider block mb-0.5">
-                      Segel SHA-256 (64-Hex Characters)
+                      {language === 'en' ? 'SHA-256 Seal (64-Hex Characters)' : 'Segel SHA-256 (64-Hex Characters)'}
                     </span>
                     <span className="font-mono text-xs text-slate-300 break-all select-all">
                       {item.sha256Hash}
@@ -195,12 +195,12 @@ export const EvidenceVault: React.FC = () => {
                     {copiedId === item.evidenceId ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Tersalin</span>
+                        <span>{t.common.copied}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>Salin Hash</span>
+                        <span>{t.evidenceTab.btnCopyHash}</span>
                       </>
                     )}
                   </button>
@@ -208,9 +208,9 @@ export const EvidenceVault: React.FC = () => {
 
                 {/* Size & MIME */}
                 <div className="flex items-center gap-4 text-[11px] text-slate-500 font-mono">
-                  <span>Ukuran: {item.sizeBytes} bytes</span>
+                  <span>{language === 'en' ? 'Size' : 'Ukuran'}: {item.sizeBytes} bytes</span>
                   <span>MIME: {item.mimeType}</span>
-                  {item.incidentId && <span>Terkait Kasus: {item.incidentId}</span>}
+                  {item.incidentId && <span>{language === 'en' ? 'Case' : 'Terkait Kasus'}: {item.incidentId}</span>}
                 </div>
               </div>
             );
