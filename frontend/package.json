@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
+    "check:budget": "node scripts/check-budget.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

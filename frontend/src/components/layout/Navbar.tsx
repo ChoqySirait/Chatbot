@@ -90,6 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 role="tab"
                 type="button"
                 aria-selected={isActive}
+                aria-controls="main-content"
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(item.id)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}

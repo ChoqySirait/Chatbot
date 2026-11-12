@@ -54,4 +54,4 @@ Masyarakat dan analis keamanan junior di Indonesia kerap menghadapi modus penipu
 - **Backend:** Python 3.10+ (diuji pada Python 3.13), FastAPI, Uvicorn, HTTPX (Asynchronous I/O), Pydantic v2, Pillow.
 - **Frontend:** React 19, Vite 8, TypeScript, Tailwind CSS v4, Lucide React, Dexie.js (IndexedDB), `oxlint`, Vitest + `fake-indexeddb`.
 - **AI Engine:** Google GenAI SDK (`MODEL_NAME` default `gemini-3.5-flash` beserta daftar model fallback terurut) menggunakan Structured JSON Outputs.
-- **Testing & CI:** 86 backend tests offline (Pytest, `pytest-asyncio`) + 7 frontend unit tests offline (Vitest) = 93 automated tests terintegrasi dengan GitHub Actions CI workflow.
+- **Testing & CI:** 86 backend tests offline (Pytest, `pytest-asyncio`) + 9 frontend unit tests offline (Vitest) = 95 automated tests terintegrasi dengan GitHub Actions CI workflow.

@@ -68,3 +68,8 @@ jobs:
         run: |
           cd frontend
           npm run build
+
+      - name: Verify Frontend Asset Size Budgets (REL-07)
+        run: |
+          cd frontend
+          npm run check:budget

@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Tests Passed](https://img.shields.io/badge/Pytest-86%2F86%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
-[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-7%2F7%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
+[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-9%2F9%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 
@@ -155,7 +155,7 @@ pytest -v
 npm --prefix frontend run lint
 npm --prefix frontend run test
 ```
-*Hasil aktual terakhir:* **86/86 test cases Pytest lulus 100% (offline dengan mocking deterministik)**, **7/7 unit test Vitest lulus**, serta **0 warnings / 0 errors** pada `oxlint`. Antarmuka menggunakan tema tunggal **Dark Slate** minimalis tanpa banner berulang agar kontras konsisten di seluruh modul (kecuali pratinjau cetak putih pada Surat Sanggahan Bank dan Dosir Forensik PDF).
+*Hasil aktual terakhir:* **86/86 test cases Pytest lulus 100% (offline dengan mocking deterministik)**, **9/9 unit test Vitest lulus**, serta **0 warnings / 0 errors** pada `oxlint`. Antarmuka menggunakan tema tunggal **Dark Slate** minimalis tanpa banner berulang agar kontras konsisten di seluruh modul (kecuali pratinjau cetak putih pada Surat Sanggahan Bank dan Dosir Forensik PDF).
 
 ### 3. Menjalankan dengan Docker / Docker Compose
 Pastikan `.env` tersedia (salin dari `.env.example`), lalu bangun dan jalankan container produksi:

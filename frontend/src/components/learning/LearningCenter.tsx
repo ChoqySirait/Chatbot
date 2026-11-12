@@ -18,7 +18,9 @@ interface QuizQuestion {
   category: string;
   categoryEn: string;
   sender: string;
+  senderEn?: string;
   messageContent: string;
+  messageContentEn: string;
   isPhishing: boolean;
   explanationId: string;
   explanationEn: string;
@@ -34,6 +36,8 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     sender: '+6281299887766',
     messageContent:
       'REKENING BCA ANDA AKAN DIBLOKIR! Kami mendeteksi transaksi mencurigakan Rp 15.000.000. Segera batalkan dalam 15 menit via: https://bca.promo-verifikasi.top',
+    messageContentEn:
+      'YOUR BCA ACCOUNT WILL BE SUSPENDED! We detected a suspicious IDR 15,000,000 transaction. Cancel within 15 minutes via: https://bca.promo-verifikasi.top',
     isPhishing: true,
     explanationId:
       'Pesan ini menggunakan domain tiruan (promo-verifikasi.top alih-alih bca.co.id) dan menciptakan kepanikan buatan dengan batas waktu 15 menit.',
@@ -57,6 +61,8 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     sender: 'JNE Express Delivery',
     messageContent:
       'Halo Kak, paket Anda tertahan di gudang karena alamat tidak lengkap. Silakan instal aplikasi pelacak resi berikut: Surat_Resi_JNE_Paket.apk',
+    messageContentEn:
+      'Hello, your parcel is held at our warehouse due to an incomplete address. Please install our tracking receipt app: Surat_Resi_JNE_Paket.apk',
     isPhishing: true,
     explanationId:
       'Ekstensi berkas adalah .APK (aplikasi Android), bukan dokumen PDF atau gambar resi. Jika dipasang, aplikasi ini dapat mencuri SMS OTP Anda.',
@@ -80,6 +86,8 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     sender: 'Tokopedia',
     messageContent:
       'Pesanan #INV/2026/05/11 telah dikirim oleh kurir. Lacak langsung pada menu Transaksi di aplikasi Tokopedia atau kunjungi https://www.tokopedia.com',
+    messageContentEn:
+      'Order #INV/2026/05/11 has been shipped by the courier. Track it directly inside the Tokopedia app Transactions menu or visit https://www.tokopedia.com',
     isPhishing: false,
     explanationId:
       'Pesan ini mengarahkan pengguna ke aplikasi resmi atau domain registrable resmi tokopedia.com tanpa meminta password, OTP, atau instalasi file.',
@@ -95,6 +103,8 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     sender: 'HR Recruitment International',
     messageContent:
       'Selamat! Anda terpilih kerja sampingan online like video YouTube dibayar Rp 500.000/hari. Untuk memulai silakan deposit modal awal Rp 100.000 ke rekening bendahara.',
+    messageContentEn:
+      'Congratulations! You were selected for part-time YouTube video liking paid IDR 500,000/day. To start, please transfer an initial IDR 100,000 deposit to our treasurer.',
     isPhishing: true,
     explanationId:
       'Modus penipuan "task scam / like video". Perusahaan resmi tidak pernah memungut biaya atau meminta deposit modal untuk mulai bekerja.',
@@ -114,8 +124,11 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
     category: 'Pemberitahuan Pajak / Tilang',
     categoryEn: 'Fake Traffic Citation (ETLE)',
     sender: 'Korlantas Polri (Palsu)',
+    senderEn: 'Traffic Police Citation (Impersonation)',
     messageContent:
       'Kendaraan Anda terdeteksi melanggar batas kecepatan kamera ETLE. Unduh surat tilang elektronik berikut untuk melihat foto bukti: Surat_ETLE_Konfirmasi.apk',
+    messageContentEn:
+      'Your vehicle was caught speeding on an ETLE traffic camera. Download the following electronic ticket file to view evidence photos: Surat_ETLE_Konfirmasi.apk',
     isPhishing: true,
     explanationId:
       'Kepolisian Republik Indonesia tidak pernah mengirimkan surat tilang ETLE dalam format file .APK melalui pesan WhatsApp.',
@@ -327,11 +340,13 @@ export const LearningCenter: React.FC = () => {
               {/* Simulated Mobile Message Card */}
               <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between text-[11px] text-slate-500 border-b border-slate-800/80 pb-2">
-                  <span className="font-mono text-cyan-400 font-semibold">{currentQ.sender}</span>
+                  <span className="font-mono text-cyan-400 font-semibold">
+                    {isId ? currentQ.sender : currentQ.senderEn || currentQ.sender}
+                  </span>
                   <span>{isId ? 'Hari Ini, 14:28' : 'Today, 14:28'}</span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-200 font-sans leading-relaxed pt-1 whitespace-pre-wrap select-all">
-                  {currentQ.messageContent}
+                  {isId ? currentQ.messageContent : currentQ.messageContentEn}
                 </p>
               </div>
 
