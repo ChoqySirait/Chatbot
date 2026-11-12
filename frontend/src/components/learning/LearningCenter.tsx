@@ -16,6 +16,7 @@ import { useLanguage } from '../../context/useLanguage';
 interface QuizQuestion {
   id: number;
   category: string;
+  categoryEn: string;
   sender: string;
   messageContent: string;
   isPhishing: boolean;
@@ -29,6 +30,7 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 1,
     category: 'SMS Perbankan',
+    categoryEn: 'Banking SMS',
     sender: '+6281299887766',
     messageContent:
       'REKENING BCA ANDA AKAN DIBLOKIR! Kami mendeteksi transaksi mencurigakan Rp 15.000.000. Segera batalkan dalam 15 menit via: https://bca.promo-verifikasi.top',
@@ -51,6 +53,7 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 2,
     category: 'WhatsApp Kurir Paket',
+    categoryEn: 'Courier Scam (WhatsApp)',
     sender: 'JNE Express Delivery',
     messageContent:
       'Halo Kak, paket Anda tertahan di gudang karena alamat tidak lengkap. Silakan instal aplikasi pelacak resi berikut: Surat_Resi_JNE_Paket.apk',
@@ -73,6 +76,7 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 3,
     category: 'Notifikasi Resmi E-Commerce',
+    categoryEn: 'Official E-Commerce Notice',
     sender: 'Tokopedia',
     messageContent:
       'Pesanan #INV/2026/05/11 telah dikirim oleh kurir. Lacak langsung pada menu Transaksi di aplikasi Tokopedia atau kunjungi https://www.tokopedia.com',
@@ -87,6 +91,7 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 4,
     category: 'Lowongan Kerja Paruh Waktu',
+    categoryEn: 'Part-Time Task Scam',
     sender: 'HR Recruitment International',
     messageContent:
       'Selamat! Anda terpilih kerja sampingan online like video YouTube dibayar Rp 500.000/hari. Untuk memulai silakan deposit modal awal Rp 100.000 ke rekening bendahara.',
@@ -107,6 +112,7 @@ const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 5,
     category: 'Pemberitahuan Pajak / Tilang',
+    categoryEn: 'Fake Traffic Citation (ETLE)',
     sender: 'Korlantas Polri (Palsu)',
     messageContent:
       'Kendaraan Anda terdeteksi melanggar batas kecepatan kamera ETLE. Unduh surat tilang elektronik berikut untuk melihat foto bukti: Surat_ETLE_Konfirmasi.apk',
@@ -130,7 +136,10 @@ interface CaseStudy {
   id: string;
   titleId: string;
   titleEn: string;
-  badge: string;
+  badgeId: string;
+  badgeEn: string;
+  source: string;
+  reviewedAt: string;
   summaryId: string;
   summaryEn: string;
   preventionId: string[];
@@ -142,7 +151,10 @@ const CASE_STUDIES: CaseStudy[] = [
     id: 'CS-01',
     titleId: 'Modus Surat Undangan & Resi Paket (.APK)',
     titleEn: 'Malicious Android APK (Wedding & Courier Scams)',
-    badge: 'Kritis (Critical)',
+    badgeId: 'Kritis',
+    badgeEn: 'Critical',
+    source: 'BSSN / OJK Indonesia Fraud Advisory',
+    reviewedAt: '2026-11-12',
     summaryId:
       'Pelaku mengirim file dengan nama "Undangan_Pernikahan.apk" atau "Foto_Paket.apk". Korban yang membuka file diminta mengizinkan instalasi aplikasi tidak dikenal. Setelah terpasang, malware membaca seluruh SMS masuk untuk mencuri OTP m-banking.',
     summaryEn:
@@ -162,7 +174,10 @@ const CASE_STUDIES: CaseStudy[] = [
     id: 'CS-02',
     titleId: 'Modus Phishing Domain Tiruan & Perubahan Tarif Transfer Bank',
     titleEn: 'Banking Lookalike Domains & Fake Fee Increase Schemes',
-    badge: 'Tinggi (High)',
+    badgeId: 'Tinggi',
+    badgeEn: 'High',
+    source: 'OJK / APJII / Perbankan Nasional Security Bulletin',
+    reviewedAt: '2026-11-12',
     summaryId:
       'Pelaku menyebarkan iklan di media sosial atau pesan WhatsApp tentang kenaikan tarif transfer bank menjadi Rp 150.000/bulan, disertai tautan formulir penolakan ke situs palsu (misal: bca-tarif-update.com).',
     summaryEn:
@@ -182,7 +197,10 @@ const CASE_STUDIES: CaseStudy[] = [
     id: 'CS-03',
     titleId: 'Modus Malvertising & Pop-Up Pembersih Virus Palsu',
     titleEn: 'Malvertising & Fake Virus Warning Pop-ups',
-    badge: 'Menengah (Medium)',
+    badgeId: 'Menengah',
+    badgeEn: 'Medium',
+    source: 'OWASP / Browser Ad-Safety & Anti-Malvertising Guide',
+    reviewedAt: '2026-11-12',
     summaryId:
       'Saat membaca komik atau menonton streaming di situs non-resmi, muncul pop-up berkedip merah bertuliskan "HP Anda Terkena 13 Virus! Klik untuk Membersihkan". Tautan tersebut mengarahkan ke langganan SMS premium atau aplikasi scam.',
     summaryEn:
@@ -295,7 +313,7 @@ export const LearningCenter: React.FC = () => {
                     : `Scenario ${currentIdx + 1} of ${QUIZ_QUESTIONS.length}`}
                 </span>
                 <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                  {currentQ.category}
+                  {isId ? currentQ.category : currentQ.categoryEn}
                 </span>
               </div>
 
@@ -490,7 +508,7 @@ export const LearningCenter: React.FC = () => {
                     {study.id}
                   </span>
                   <span className="text-[10px] font-bold text-rose-300 bg-rose-950 px-2 py-0.5 rounded-full border border-rose-800/80">
-                    {study.badge}
+                    {isId ? study.badgeId : study.badgeEn}
                   </span>
                 </div>
 
@@ -513,6 +531,13 @@ export const LearningCenter: React.FC = () => {
                     ))}
                   </ul>
                 </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800/80 text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-1 font-mono">
+                <span>{study.source}</span>
+                <span>
+                  {isId ? 'Ditinjau' : 'Reviewed'}: {study.reviewedAt}
+                </span>
               </div>
             </div>
           ))}

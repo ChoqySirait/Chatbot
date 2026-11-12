@@ -211,7 +211,7 @@ __________________________
   return (
     <div className="space-y-6">
       {/* Header & Sub-Tabs */}
-      <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <FileText className="w-5 h-5 text-cyan-400" />
@@ -253,7 +253,7 @@ __________________________
       {/* VIEW 1: Bank Dispute Letter */}
       {activeTab === 'dispute' && (
         <div className="space-y-4">
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 print:hidden">
             <button
               type="button"
               onClick={() => handleCopy(generateLetterText())}
@@ -274,7 +274,7 @@ __________________________
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4 min-w-0">
+            <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 rounded-2xl p-5 space-y-4 min-w-0 print:hidden">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 {language === 'en' ? 'Dispute Letter Parameters' : 'Parameter Surat Sanggahan'}
               </h3>
@@ -395,13 +395,13 @@ __________________________
         </div>
       )}
 
-      {/* VIEW 2: Comprehensive Forensic Dossier (Markdown / JSON) */}
+      {/* VIEW 2: Comprehensive Forensic Dossier (Markdown / JSON / Printable PDF) */}
       {activeTab === 'dossier' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/40 p-4 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/40 p-4 rounded-xl border border-slate-800 print:hidden">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <FolderGit2 className="w-4 h-4 text-indigo-400 shrink-0" />
-              <label className="text-xs text-slate-300 font-semibold shrink-0">
+              <label htmlFor="dossier-case-select" className="text-xs text-slate-300 font-semibold shrink-0">
                 {language === 'en' ? 'Select Incident Case:' : 'Pilih Kasus Insiden:'}
               </label>
               {cases.length === 0 ? (
@@ -410,6 +410,7 @@ __________________________
                 </span>
               ) : (
                 <select
+                  id="dossier-case-select"
                   value={selectedCaseId}
                   onChange={(e) => setSelectedCaseId(e.target.value)}
                   className="bg-slate-950 border border-slate-700 text-xs rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-cyan-500"
@@ -423,7 +424,7 @@ __________________________
               )}
             </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
               <button
                 type="button"
                 onClick={() => handleCopy(activeDossierMarkdown)}
@@ -452,17 +453,27 @@ __________________________
                 <FileCode className="w-3.5 h-3.5 text-cyan-400" />
                 <span>{language === 'en' ? 'Download JSON' : 'Unduh JSON'}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={handlePrint}
+                disabled={!activeDossierMarkdown}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold disabled:opacity-50"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>{language === 'en' ? 'Print / Save PDF' : 'Cetak / Simpan PDF'}</span>
+              </button>
             </div>
           </div>
 
           {/* Markdown Dossier Preview */}
-          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto max-h-[700px] overflow-y-auto">
+          <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto max-h-[700px] overflow-y-auto print:bg-white print:text-slate-900 print:border-none print:rounded-none print:p-0 print:max-h-none print:overflow-visible">
             {loadingDossier ? (
               <div className="text-center py-12 text-slate-500 text-xs">
                 {language === 'en' ? 'Compiling forensic dossier...' : 'Menyusun dosir forensik...'}
               </div>
             ) : activeDossierMarkdown ? (
-              <pre className="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed select-all">
+              <pre className="font-mono text-xs text-slate-300 whitespace-pre-wrap leading-relaxed select-all print:text-slate-900">
                 {activeDossierMarkdown}
               </pre>
             ) : (
