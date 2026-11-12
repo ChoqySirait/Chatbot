@@ -1,7 +1,7 @@
 # Product Requirement Document (PRD)
 
 ## Project Name: SecurAI — Digital Trust, Threat Intelligence & Incident Assistance Platform
-**Status:** Released v2.5.0 (Milestones 0–6 Selesai & Terverifikasi)  
+**Status:** Released v2.6.0 (Milestones 0–7 Selesai & Terverifikasi)  
 **Architecture:** Modular FastAPI Backend + React 19/Vite/TS Local-First Frontend
 
 ---
@@ -40,10 +40,12 @@ Masyarakat dan analis keamanan junior di Indonesia kerap menghadapi modus penipu
 | UX-03 | **Dual-Mode Presentation** | Beralih instan antara Consumer Mode (ramah, non-teknis, aksi darurat) dan Analyst SOC Mode (telemetri mendalam, IoC, MITRE). | ✅ Complete |
 | UX-04 | **100% Bilingual i18n Localization** | Dukungan 1-klik Bahasa Indonesia dan English secara menyeluruh dari navigasi hingga modal, formulir, dosir, dan chat AI. | ✅ Complete |
 | UX-05 | **Local Overview Dashboard** | Tab Ringkasan (*Overview*) untuk statistik riwayat pemeriksaan, temuan risiko tinggi, kasus aktif, dan artefak SHA-256 lokal. | ✅ Complete |
+| UX-09 | **Keyboard & ARIA Accessibility** | Skip-link konten utama, WAI-ARIA `tablist`/`tab` beserta navigasi panah keyboard, `aria-pressed`, `aria-live="polite"`, fokus jelas, dan styling `@media print`. | ✅ Complete |
 | INC-02 | **Local-First Storage (Dexie.js)** | Penyimpanan buku kasus insiden, timeline kronologis, dan brankas bukti pada IndexedDB peramban (*zero cloud server retention*). | ✅ Complete |
-| REP-01 | **Forensic Dossier Exporter** | Ekspor laporan insiden komprehensif dalam format Markdown (.md), JSON kanonikal, dan draf surat sanggahan resmi bank siap cetak PDF. | ✅ Complete |
-| EDU-01 | **Learning Center & Simulator** | Pusat edukasi modus penipuan online Indonesia dan simulator kuis deteksi phishing dengan evaluasi skor kewaspadaan. | ✅ Complete |
+| REP-01 | **Forensic Dossier Exporter** | Ekspor laporan insiden komprehensif dalam format Markdown (.md), JSON kanonikal, dan cetak PDF bersih (Surat Sanggahan Bank + Dosir Forensik). | ✅ Complete |
+| EDU-01 | **Learning Center & Simulator** | Pusat edukasi modus penipuan online Indonesia dan simulator kuis deteksi phishing dwibahasa beserta sumber rujukan & tanggal peninjauan. | ✅ Complete |
 | REL-04 | **Docker Non-Root Packaging** | Container multi-stage (`Dockerfile` & `docker-compose.yml`) dengan user non-root `appuser` dan *read-only rootfs*. | ✅ Complete |
+| REL-07 | **Performance Budgets & Baseline** | Verifikasi otomatis anggaran ukuran bundle (`Vite dist` JS/CSS), batas payload/gambar, dan target latensi p95 deterministik luring. | ✅ Complete |
 | GOV-01 | **Privacy & Acceptable-Use Boundaries** | Dokumentasi [`PRIVACY.md`](PRIVACY.md) dan pemberitahuan batasan pemrosesan data terintegrasi pada tab Pengaturan. | ✅ Complete |
 
 ---
@@ -52,4 +54,4 @@ Masyarakat dan analis keamanan junior di Indonesia kerap menghadapi modus penipu
 - **Backend:** Python 3.10+ (diuji pada Python 3.13), FastAPI, Uvicorn, HTTPX (Asynchronous I/O), Pydantic v2, Pillow.
 - **Frontend:** React 19, Vite 8, TypeScript, Tailwind CSS v4, Lucide React, Dexie.js (IndexedDB), `oxlint`, Vitest + `fake-indexeddb`.
 - **AI Engine:** Google GenAI SDK (`MODEL_NAME` default `gemini-3.5-flash` beserta daftar model fallback terurut) menggunakan Structured JSON Outputs.
-- **Testing & CI:** 83 backend tests offline (Pytest, `pytest-asyncio`) + 7 frontend unit tests offline (Vitest) = 90 automated tests terintegrasi dengan GitHub Actions CI workflow.
+- **Testing & CI:** 86 backend tests offline (Pytest, `pytest-asyncio`) + 7 frontend unit tests offline (Vitest) = 93 automated tests terintegrasi dengan GitHub Actions CI workflow.

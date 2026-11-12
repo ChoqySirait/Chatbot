@@ -2,6 +2,16 @@
 
 Seluruh perubahan penting pada platform **SecurAI — Digital Trust, Threat Intelligence & Incident Assistance** didokumentasikan pada berkas ini.
 
+## [2.6.0] - 2026-11-12
+
+Pembaruan kualitas pasca-rilis **v2.6.0 (Milestone 7)** yang melengkapi aksesibilitas UI, cetak PDF dosir forensik, provenansi edukasi, dan batas performa terukur.
+
+### Added / Changed
+- **Keyboard & ARIA Accessibility (`UX-09`):** Menambahkan tautan *skip-to-main-content*, region pengumuman `aria-live="polite"`, peran WAI-ARIA `tablist`/`tab` beserta navigasi keyboard (`ArrowLeft`, `ArrowRight`, `Home`, `End`) pada [`Navbar.tsx`](frontend/src/components/layout/Navbar.tsx), atribut `aria-pressed`/`role="group"` pada pengalih mode & bahasa di [`Header.tsx`](frontend/src/components/layout/Header.tsx), serta indikator fokus `:focus-visible`.
+- **Printable Forensic Dossier PDF (`REP-03`):** Menambahkan tombol **Cetak / Simpan PDF** beserta styling `@media print` bersih (putih di atas hitam tanpa panel kontrol gelap) pada [`ReportGenerator.tsx`](frontend/src/components/reports/ReportGenerator.tsx).
+- **Learning Center Provenance (`EDU-02`):** Menambahkan terjemahan kategori kuis (`categoryEn`), badge keparahan dwibahasa, serta sumber referensi resmi dan tanggal peninjauan (`reviewedAt`) pada setiap studi kasus di [`LearningCenter.tsx`](frontend/src/components/learning/LearningCenter.tsx).
+- **Performance Budgets & Latency Baseline (`REL-07`):** Menambahkan suite [`tests/test_performance_budgets.py`](tests/test_performance_budgets.py) yang memverifikasi anggaran ukuran bundle frontend (JS raw ≤ 650 KB / gzip ≤ 200 KB, CSS ≤ 100 KB), batas payload HTTP 5 MB & gambar 3 MB / 4096×4096 px, serta target latensi p95 deterministik luring.
+
 ## [2.5.0] - 2026-11-12
 
 Rilis perdana **v2.5.0** yang menuntaskan seluruh Milestones 0–6 pada rencana pengembangan dan backlog keamanan.
