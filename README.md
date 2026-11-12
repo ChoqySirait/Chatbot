@@ -7,6 +7,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Tests Passed](https://img.shields.io/badge/Pytest-83%2F83%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-7%2F7%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 
 <p align="center">
@@ -44,7 +45,7 @@
 
 ## 📊 Status Implementasi Fitur
 
-### ✅ Fitur Release Candidate v2.5.0 (Milestones 1–6 Selesai)
+### ✅ Fitur Rilis v2.5.0 (Milestones 1–6 Selesai)
 - **Screenshot Security Hardening & Consent Gate (Milestone 6 - SEC-06, AI-07, UX-06):** Validasi ketat payload base64, deteksi *magic bytes* PNG/JPEG/WEBP, batas ukuran 3 MB & batas dimensi/piksel *decompression bomb* (4096×4096 via Pillow), segel SHA-256 64-karakter, serta endpoint `POST /api/v1/analyze/image` dengan gerbang **persetujuan eksplisit AI eksternal (`external_ai_consent`)**.
 - **Local Overview Dashboard & Binary Inspector (Milestone 6 - UX-05, ANA-10):** Tab **Ringkasan / Overview** berbasis riwayat IndexedDB (`db.analysisHistory`) serta pemeriksa berkas biner lokal (`.apk`, `.pdf`, `.exe`, `.zip`) via browser Web Crypto API SHA-256 + deteksi penyamaran *magic-byte masquerading* 100% di klien tanpa mengunggah berkas ke server.
 - **Containerized Deployment & Governance Docs (Milestone 6 - REL-04, GOV-01, GOV-02):** `Dockerfile` multi-stage (build React Vite + runtime Python non-root `appuser` + healthcheck), `docker-compose.yml` read-only rootfs, [`PRIVACY.md`](PRIVACY.md), dan pemberitahuan privasi & batas penggunaan sah di dalam aplikasi.
@@ -193,8 +194,9 @@ flowchart LR
 
 ---
 
-## 📄 Lisensi, Privasi & Disclaimer
+## 📄 Lisensi, Rilis, Privasi & Disclaimer
 
+- **Catatan Rilis:** Lihat [`CHANGELOG.md`](CHANGELOG.md) untuk riwayat lengkap rilis `v2.5.0`.
 - **Kebijakan Privasi & Penggunaan Sah:** Lihat [`PRIVACY.md`](PRIVACY.md).
-- **Lisensi:** Belum ditetapkan secara formal oleh pemilik proyek (menunggu keputusan lisensi open-source resmi pada repositori ini).
+- **Lisensi:** Dilindungi di bawah [`MIT License`](LICENSE).
 - **Disclaimer Keamanan:** Segel kriptografis SHA-256 menjamin integritas data sejak artefak direkam (*tamper-evident*), sedangkan skor risiko heuristik dan analisis AI bersifat asistensi triage teknis—bukan jaminan mutlak atau bukti hukum tanpa validasi otoritas berwenang.

@@ -24,7 +24,15 @@ def _reset_limiter():
 
 
 def test_release_governance_and_deployment_files_present():
-    for rel_path in ["Dockerfile", ".dockerignore", "docker-compose.yml", "PRIVACY.md", "ARCHITECTURE.md"]:
+    for rel_path in [
+        "Dockerfile",
+        ".dockerignore",
+        "docker-compose.yml",
+        "PRIVACY.md",
+        "ARCHITECTURE.md",
+        "LICENSE",
+        "CHANGELOG.md",
+    ]:
         full_path = os.path.join(ROOT_DIR, rel_path)
         assert os.path.isfile(full_path), f"Missing release artifact: {rel_path}"
 

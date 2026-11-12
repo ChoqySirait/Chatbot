@@ -1,7 +1,7 @@
 # Product Requirement Document (PRD)
 
 ## Project Name: SecurAI — Digital Trust, Threat Intelligence & Incident Assistance Platform
-**Status:** Release Candidate (v2.5.0) — All Core Milestones Implemented & Tested  
+**Status:** Released v2.5.0 (Milestones 0–6 Selesai & Terverifikasi)  
 **Architecture:** Modular FastAPI Backend + React 19/Vite/TS Local-First Frontend
 
 ---
