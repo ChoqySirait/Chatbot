@@ -25,3 +25,15 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+}
