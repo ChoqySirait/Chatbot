@@ -3,6 +3,7 @@ import {
   FolderPlus,
   Clock,
   Download,
+  Lock,
   Trash2,
   Plus,
   Upload,
@@ -11,6 +12,7 @@ import {
   User,
 } from 'lucide-react';
 import { db, exportIncidentCasePackage, importIncidentCasePackage } from '../../db';
+import { encryptVaultPayload, decryptVaultPayload, isEncryptedEnvelope } from '../../utils/vaultCrypto';
 import type { IncidentCase, IncidentTimelineEvent, SeverityLevel } from '../../types/api';
 import { useLanguage } from '../../context/useLanguage';
 
@@ -211,6 +213,32 @@ export const IncidentManager: React.FC = () => {
     }
   };
 
+  const handleExportEncrypted = async (caseId: string) => {
+    try {
+      const pass = prompt(
+        language === 'en'
+          ? 'Enter a passphrase to encrypt this case bundle with AES-256-GCM (minimum 6 characters):'
+          : 'Masukkan passphrase untuk mengenkripsi bundel kasus ini dengan AES-256-GCM (minimal 6 karakter):'
+      );
+      if (!pass) return;
+      if (pass.length < 6) {
+        alert(language === 'en' ? 'Passphrase must be at least 6 characters.' : 'Passphrase minimal 6 karakter.');
+        return;
+      }
+      const plainJson = await exportIncidentCasePackage(caseId);
+      const encryptedJson = await encryptVaultPayload(plainJson, pass);
+      const blob = new Blob([encryptedJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `securai-case-${caseId}.encrypted.securai`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(`Export encrypted failed: ${err}`);
+    }
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -219,7 +247,31 @@ export const IncidentManager: React.FC = () => {
     reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
-        const importedId = await importIncidentCasePackage(text);
+        let payloadToImport = text;
+
+        try {
+          const parsed = JSON.parse(text);
+          if (isEncryptedEnvelope(parsed)) {
+            const pass = prompt(
+              language === 'en'
+                ? 'This package is encrypted with AES-256-GCM. Enter passphrase to decrypt:'
+                : 'Paket ini terenkripsi dengan AES-256-GCM. Masukkan passphrase untuk membuka:'
+            );
+            if (!pass) return;
+            payloadToImport = await decryptVaultPayload(parsed, pass);
+          }
+        } catch (decryptErr) {
+          if (decryptErr instanceof Error && decryptErr.message.includes('Decryption failed')) {
+            alert(
+              language === 'en'
+                ? 'Decryption failed: Incorrect passphrase or tampered package.'
+                : 'Gagal membuka: Passphrase salah atau paket rusak.'
+            );
+            return;
+          }
+        }
+
+        const importedId = await importIncidentCasePackage(payloadToImport);
         alert(language === 'en' ? `Imported case: ${importedId}` : `Berhasil mengimpor kasus: ${importedId}`);
         await loadCases();
       } catch (err) {
@@ -246,7 +298,7 @@ export const IncidentManager: React.FC = () => {
           <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium cursor-pointer border border-slate-700 transition-colors">
             <Upload className="w-3.5 h-3.5 text-cyan-400" />
             <span>{t.incidentsTab.btnImport}</span>
-            <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+            <input type="file" accept=".json,.securai" onChange={handleImportFile} className="hidden" />
           </label>
 
           <button
@@ -361,9 +413,22 @@ export const IncidentManager: React.FC = () => {
                     type="button"
                     onClick={() => handleExport(selectedCase.caseId)}
                     className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
-                    title="Export Case Bundle (.JSON)"
+                    title={language === 'en' ? 'Export Plain Case Bundle (.JSON)' : 'Ekspor Bundel Kasus Polos (.JSON)'}
                   >
                     <Download className="w-4 h-4 text-cyan-400" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleExportEncrypted(selectedCase.caseId)}
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                    title={
+                      language === 'en'
+                        ? 'Export Encrypted Case Bundle (AES-256-GCM)'
+                        : 'Ekspor Bundel Kasus Terenkripsi (AES-256-GCM)'
+                    }
+                  >
+                    <Lock className="w-4 h-4 text-emerald-400" />
                   </button>
 
                   <button

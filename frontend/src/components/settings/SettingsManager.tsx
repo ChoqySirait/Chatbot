@@ -4,6 +4,7 @@ import {
   Database,
   Trash2,
   Download,
+  Lock,
   Server,
   ShieldCheck,
   Cpu,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { db, purgeAllLocalVault } from '../../db';
 import { useLanguage } from '../../context/useLanguage';
+import { encryptVaultPayload } from '../../utils/vaultCrypto';
 
 export const SettingsManager: React.FC = () => {
   const { t, language } = useLanguage();
@@ -101,7 +103,7 @@ export const SettingsManager: React.FC = () => {
 
     const backup = {
       app: 'SecurAI',
-      version: '2.5.0',
+      version: '2.7.0',
       exportedAt: new Date().toISOString(),
       incidents,
       timeline,
@@ -116,6 +118,49 @@ export const SettingsManager: React.FC = () => {
     a.download = `securai-full-vault-backup-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportEncryptedBackup = async () => {
+    try {
+      const pass = prompt(
+        language === 'en'
+          ? 'Enter a passphrase to encrypt your entire vault backup with AES-256-GCM (minimum 6 characters):'
+          : 'Masukkan passphrase untuk mengenkripsi cadangan brankas dengan AES-256-GCM (minimal 6 karakter):'
+      );
+      if (!pass) return;
+      if (pass.length < 6) {
+        alert(language === 'en' ? 'Passphrase must be at least 6 characters.' : 'Passphrase minimal 6 karakter.');
+        return;
+      }
+
+      const incidents = await db.incidents.toArray();
+      const timeline = await db.timeline.toArray();
+      const evidence = await db.evidence.toArray();
+      const history = await db.analysisHistory.toArray();
+
+      const backup = {
+        app: 'SecurAI',
+        version: '2.7.0',
+        exportedAt: new Date().toISOString(),
+        incidents,
+        timeline,
+        evidence,
+        analysisHistory: history,
+      };
+
+      const plainJson = JSON.stringify(backup, null, 2);
+      const encryptedJson = await encryptVaultPayload(plainJson, pass);
+
+      const blob = new Blob([encryptedJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `securai-full-vault-backup-${Date.now()}.encrypted.securai`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(`Export encrypted backup failed: ${err}`);
+    }
   };
 
   return (
@@ -177,6 +222,17 @@ export const SettingsManager: React.FC = () => {
             <Download className="w-4 h-4 text-cyan-400" />
             <span>
               {language === 'en' ? 'Download Full Backup (.JSON)' : 'Unduh Cadangan Lengkap (.JSON)'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportEncryptedBackup}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+          >
+            <Lock className="w-4 h-4 text-emerald-400" />
+            <span>
+              {language === 'en' ? 'Encrypted Backup (AES-256-GCM)' : 'Cadangan Terenkripsi (AES-256-GCM)'}
             </span>
           </button>
 
