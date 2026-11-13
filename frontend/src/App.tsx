@@ -4,6 +4,7 @@ import { Navbar, type TabType } from './components/layout/Navbar';
 import { LanguageProvider } from './context/LanguageContext';
 import { ModeProvider } from './context/ModeContext';
 import { useLanguage } from './context/useLanguage';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { OverviewDashboard } from './components/overview/OverviewDashboard';
 import { AnalyzeWorkspace } from './components/analyze/AnalyzeWorkspace';
 import { ThreatIntelExplorer } from './components/threat-intel/ThreatIntelExplorer';
@@ -120,10 +121,12 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <ModeProvider>
-        <AppContent />
-      </ModeProvider>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <ModeProvider>
+          <AppContent />
+        </ModeProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }

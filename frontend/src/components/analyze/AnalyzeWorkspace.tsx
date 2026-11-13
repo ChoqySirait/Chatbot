@@ -26,6 +26,7 @@ import { useLanguage } from '../../context/useLanguage';
 import { useMode } from '../../context/useMode';
 import { ConsumerView } from './ConsumerView';
 import { AnalystView } from './AnalystView';
+import { AnalyzeWorkspaceSkeleton } from '../common/SkeletonLoader';
 
 interface AnalyzeWorkspaceProps {
   onSwitchTab: (tab: 'incidents' | 'evidence' | 'reports') => void;
@@ -943,7 +944,9 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
 
         {/* Right Column: Mode-Specific Output View */}
         <div className="lg:col-span-7 min-w-0">
-          {currentResult ? (
+          {loading ? (
+            <AnalyzeWorkspaceSkeleton language={language} />
+          ) : currentResult ? (
             mode === 'consumer' ? (
               <ConsumerView
                 result={currentResult}
