@@ -2,6 +2,24 @@
 
 Seluruh perubahan penting pada platform **SecurAI — Digital Trust, Threat Intelligence & Incident Assistance** didokumentasikan pada berkas ini.
 
+## [2.7.0] - 2026-11-13
+
+Rilis pembaruan **v2.7.0 (Milestone 8)** yang menambahkan enkripsi brankas sisi klien (*Web Crypto API*), React Error Boundary yang tangguh, loading skeletons ramah aksesibilitas, dan mitigasi gerakan berlebih.
+
+### Added / Changed
+- **Client-Side Vault Encryption (`INC-08`):**
+  - Implementasi modul kriptografi klien [`vaultCrypto.ts`](frontend/src/utils/vaultCrypto.ts) menggunakan Web Crypto API standar (PBKDF2-HMAC-SHA256 100.000 iterasi + AES-256-GCM + IV 12-byte + salt 16-byte + checksum SHA-256).
+  - Ekspor bundle paket kasus terenkripsi (`.securai`) yang dilindungi kata sandi pada [`IncidentManager.tsx`](frontend/src/components/incidents/IncidentManager.tsx).
+  - Impor paket kasus otomatis mendeteksi envelope terenkripsi `.securai` dan meminta passphrase pengguna sebelum diimpor ke IndexedDB.
+  - Cadangan brankas terenkripsi penuh (*Encrypted Backup*) pada [`SettingsManager.tsx`](frontend/src/components/settings/SettingsManager.tsx) dengan verifikasi integritas dekripsi.
+  - Dokumentasi model ancaman eksplisit pada envelope data (tidak melindungi dari malware tingkat host; passphrase hilang tidak dapat dipulihkan).
+- **UI Error Boundary, Loading Skeletons & Reduced Motion (`UX-10`):**
+  - Komponen [`ErrorBoundary.tsx`](frontend/src/components/common/ErrorBoundary.tsx) yang menangkap error runtime React tanpa kehilangan data lokal IndexedDB, dilengkapi Dark Slate crash card, opsi coba pulihkan sesi, salin rincian error teknis, dan reload aplikasi.
+  - Komponen [`SkeletonLoader.tsx`](frontend/src/components/common/SkeletonLoader.tsx) (`Skeleton`, `AnalyzeWorkspaceSkeleton`) dengan peran WAI-ARIA `role="status"` dan `aria-busy="true"` untuk umpan balik visual saat analisis keamanan berlangsung tanpa pergeseran layout.
+  - Integrasi aturan `@media (prefers-reduced-motion: reduce)` pada [`index.css`](frontend/src/index.css) untuk kenyamanan pengguna dengan preferensi aksesibilitas vestibular.
+- **Testing & Quality Assurance:**
+  - Menambahkan 10 tes unit frontend baru (`vaultCrypto.test.ts` dan `uiFeedback.test.tsx`), meningkatkan total test suite menjadi **19 Vitest tests** + **86 Pytest tests** = **105 automated tests passed**.
+
 ## [2.6.0] - 2026-11-12
 
 Pembaruan kualitas pasca-rilis **v2.6.0 (Milestone 7)** yang melengkapi aksesibilitas UI, cetak PDF dosir forensik, provenansi edukasi, dan batas performa terukur.

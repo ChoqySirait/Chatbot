@@ -40,7 +40,7 @@ export const Header: React.FC = () => {
                 <span className="font-semibold text-base text-white tracking-tight">
                   Secur<span className="text-cyan-400">AI</span>
                 </span>
-                <span className="text-[11px] font-mono text-slate-500">v2.6</span>
+                <span className="text-[11px] font-mono text-slate-500">v2.7</span>
               </div>
               <p className="text-[11px] text-slate-400 hidden md:block truncate">
                 {t.app.subtitle}

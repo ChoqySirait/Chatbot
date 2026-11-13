@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Tests Passed](https://img.shields.io/badge/Pytest-86%2F86%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
-[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-9%2F9%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
+[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-19%2F19%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 
@@ -45,7 +45,9 @@
 
 ## 📊 Status Implementasi Fitur
 
-### ✅ Fitur Rilis v2.6.0 (Milestones 1–7 Selesai)
+### ✅ Fitur Rilis v2.7.0 (Milestones 1–8 Selesai)
+- **Client-Side Vault Encryption & Case Bundles (Milestone 8 - INC-08):** Enkripsi brankas Web Crypto API (PBKDF2-HMAC-SHA256 100.000 iterasi + AES-256-GCM + IV 12-byte + SHA-256 integrity checksum) untuk ekspor paket kasus `.securai` dan cadangan brankas penuh, dilengkapi dokumen model ancaman (*threat model boundary*).
+- **UI Error Boundary, Loading Skeletons & Reduced Motion (Milestone 8 - UX-10):** React Error Boundary dengan Dark Slate crash card & tombol pemulihan tanpa kehilangan data IndexedDB, skeleton pulse penanda status `role="status"` tanpa pergeseran tata letak (*layout shift*), serta dukungan `@media (prefers-reduced-motion: reduce)`.
 - **Aksesibilitas Keyboard/ARIA, Cetak PDF Dosir & Performance Budgets (Milestone 7 - UX-09, REP-03, EDU-02, REL-07):** Navigasi tab WAI-ARIA (*skip-link*, `tablist`/`tab` panah keyboard, `aria-live`), cetak PDF dosir forensik bersih (`@media print`), sumber & tanggal peninjauan studi kasus, serta guard ukuran aset `dist` dan target latensi p95 luring.
 - **Screenshot Security Hardening & Consent Gate (Milestone 6 - SEC-06, AI-07, UX-06):** Validasi ketat payload base64, deteksi *magic bytes* PNG/JPEG/WEBP, batas ukuran 3 MB & batas dimensi/piksel *decompression bomb* (4096×4096 via Pillow), segel SHA-256 64-karakter, serta endpoint `POST /api/v1/analyze/image` dengan gerbang **persetujuan eksplisit AI eksternal (`external_ai_consent`)**.
 - **Local Overview Dashboard & Binary Inspector (Milestone 6 - UX-05, ANA-10):** Tab **Ringkasan / Overview** berbasis riwayat IndexedDB (`db.analysisHistory`) serta pemeriksa berkas biner lokal (`.apk`, `.pdf`, `.exe`, `.zip`) via browser Web Crypto API SHA-256 + deteksi penyamaran *magic-byte masquerading* 100% di klien tanpa mengunggah berkas ke server.
