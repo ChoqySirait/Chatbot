@@ -119,21 +119,53 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     if (isListening) {
       speechRecognizerRef.current?.stop();
       setIsListening(false);
+      setNotice(
+        language === 'en'
+          ? 'Microphone stopped.'
+          : 'Perekaman mikrofon dihentikan.'
+      );
       return;
     }
 
-    if (!isSpeechRecognitionSupported()) return;
+    if (!isSpeechRecognitionSupported()) {
+      setError(
+        language === 'en'
+          ? 'Web Speech voice recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.'
+          : 'Fitur input suara Web Speech belum didukung di browser ini. Mohon gunakan Google Chrome atau Microsoft Edge.'
+      );
+      return;
+    }
+
+    setError(null);
+    setNotice(
+      language === 'en'
+        ? 'Microphone is listening... Speak your question or incident.'
+        : 'Mikrofon aktif mendengarkan... Silakan ceritakan pesan atau kendala keamanan Anda.'
+    );
 
     try {
       const recognizer = createSpeechRecognizer({
         lang: language,
-        onStart: () => setIsListening(true),
-        onEnd: () => setIsListening(false),
-        onError: () => setIsListening(false),
+        onStart: () => {
+          setIsListening(true);
+        },
+        onEnd: () => {
+          setIsListening(false);
+        },
+        onError: (err) => {
+          setIsListening(false);
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          setError(errorMsg);
+        },
         onResult: (transcript, isFinal) => {
           setChatInput(transcript);
           if (isFinal) {
             setIsListening(false);
+            setNotice(
+              language === 'en'
+                ? 'Voice input converted to text!'
+                : 'Suara Anda berhasil diubah menjadi teks!'
+            );
           }
         },
       });
@@ -142,8 +174,13 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
         speechRecognizerRef.current = recognizer;
         recognizer.start();
       }
-    } catch {
+    } catch (err) {
       setIsListening(false);
+      setError(
+        language === 'en'
+          ? `Microphone error: ${err}`
+          : `Kendala mikrofon: ${err}`
+      );
     }
   };
 
@@ -154,13 +191,31 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       return;
     }
 
+    if (!isSpeechSynthesisSupported()) {
+      setError(
+        language === 'en'
+          ? 'Speech playback is not supported on this device/browser.'
+          : 'Pemutar suara (Speech Synthesis) belum didukung pada browser ini.'
+      );
+      return;
+    }
+
     setSpeakingMessageId(msgId);
+    setError(null);
     const rate = Number(localStorage.getItem('securai_speech_rate') || '1.0');
     speakText(textToSpeak, {
       lang: language,
       rate,
+      onStart: () => setSpeakingMessageId(msgId),
       onEnd: () => setSpeakingMessageId(null),
-      onError: () => setSpeakingMessageId(null),
+      onError: (err) => {
+        setSpeakingMessageId(null);
+        setError(
+          language === 'en'
+            ? `Audio playback error: ${err instanceof Error ? err.message : err}`
+            : `Kendala pemutaran suara: ${err instanceof Error ? err.message : err}`
+        );
+      },
     });
   };
 
@@ -768,21 +823,27 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                   }`}
                 />
 
-                {isSpeechRecognitionSupported() && (
-                  <button
-                    type="button"
-                    onClick={handleToggleListen}
-                    disabled={loading}
-                    title={isListening ? t.voice.micStop : t.voice.micStart}
-                    className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
-                      isListening
-                        ? 'bg-rose-500/25 border-rose-500 text-rose-300 animate-pulse'
-                        : 'bg-slate-900 border-slate-700 hover:border-cyan-500/70 text-slate-400 hover:text-cyan-400'
-                    }`}
-                  >
-                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleToggleListen}
+                  disabled={loading}
+                  title={
+                    !isSpeechRecognitionSupported()
+                      ? t.voice.micNotSupported
+                      : isListening
+                      ? t.voice.micStop
+                      : t.voice.micStart
+                  }
+                  className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    !isSpeechRecognitionSupported()
+                      ? 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
+                      : isListening
+                      ? 'bg-rose-500/25 border-rose-500 text-rose-300 animate-pulse'
+                      : 'bg-slate-900 border-slate-700 hover:border-cyan-500/70 text-slate-400 hover:text-cyan-400'
+                  }`}
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
 
                 <button
                   type="submit"

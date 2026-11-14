@@ -40,6 +40,9 @@ interface IWindowWithSpeech extends Window {
   webkitSpeechRecognition?: ISpeechRecognitionConstructor;
 }
 
+// Persistent module-level reference to prevent V8 garbage-collection during active speech
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+
 export interface SpeechRecognitionController {
   start: () => void;
   stop: () => void;
@@ -148,8 +151,12 @@ export function speakText(
     onError,
   } = options;
 
-  // Cancel any ongoing utterance before speaking new text
-  window.speechSynthesis.cancel();
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+    window.speechSynthesis.cancel();
+  }
 
   const cleanText = sanitizeTextForSpeech(rawText, lang);
   if (!cleanText) {
@@ -158,16 +165,27 @@ export function speakText(
   }
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
+  activeUtterance = utterance;
+
   utterance.lang = lang === 'en' ? 'en-US' : 'id-ID';
   utterance.rate = Math.max(0.6, Math.min(1.5, rate));
   utterance.pitch = Math.max(0.7, Math.min(1.4, pitch));
+  utterance.volume = 1.0;
 
   // Voice preference matching if available
-  const voices = window.speechSynthesis.getVoices();
-  const targetPrefix = lang === 'en' ? 'en' : 'id';
-  const matchedVoice = voices.find((v) => v.lang.toLowerCase().startsWith(targetPrefix));
-  if (matchedVoice) {
-    utterance.voice = matchedVoice;
+  try {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      const targetPrefix = lang === 'en' ? 'en' : 'id';
+      const matchedVoice = voices.find((v) =>
+        v.lang.toLowerCase().replace('_', '-').startsWith(targetPrefix)
+      );
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      }
+    }
+  } catch {
+    // Ignore voice enumeration failures
   }
 
   utterance.onstart = () => {
@@ -175,10 +193,12 @@ export function speakText(
   };
 
   utterance.onend = () => {
+    activeUtterance = null;
     onEnd?.();
   };
 
   utterance.onerror = (e) => {
+    activeUtterance = null;
     // Treat user cancel / interrupt as non-fatal
     if (e.error === 'interrupted' || e.error === 'canceled') {
       onEnd?.();
@@ -187,11 +207,20 @@ export function speakText(
     }
   };
 
-  window.speechSynthesis.speak(utterance);
+  try {
+    window.speechSynthesis.speak(utterance);
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+  } catch (err) {
+    activeUtterance = null;
+    onError?.(err);
+  }
 
   return {
     cancel: () => {
       window.speechSynthesis.cancel();
+      activeUtterance = null;
       onEnd?.();
     },
   };
@@ -204,6 +233,16 @@ export function stopSpeaking(): void {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
+  if (activeUtterance) {
+    activeUtterance = null;
+  }
+}
+
+/**
+ * Checks if the browser is currently synthesizing speech.
+ */
+export function isCurrentlySpeaking(): boolean {
+  return activeUtterance !== null || (typeof window !== 'undefined' && !!window.speechSynthesis?.speaking);
 }
 
 /**
@@ -239,7 +278,33 @@ export function createSpeechRecognizer(options: {
   };
 
   recognition.onerror = (event: Event) => {
-    options.onError?.(event);
+    const errorEvent = event as unknown as { error?: string };
+    const code = errorEvent?.error || 'unknown';
+    let friendly = options.lang === 'en' ? 'Voice recognition error.' : 'Kendala pengenalan suara.';
+
+    if (code === 'not-allowed') {
+      friendly =
+        options.lang === 'en'
+          ? 'Microphone permission was blocked. Please click the padlock/tune icon in your browser address bar and set Microphone to "Allow".'
+          : 'Izin mikrofon diblokir oleh browser. Silakan klik ikon gembok di sebelah kiri bilah alamat browser Anda dan ubah izin Mikrofon menjadi "Izinkan" (Allow).';
+    } else if (code === 'no-speech') {
+      friendly =
+        options.lang === 'en'
+          ? 'No speech detected. Please speak clearly into your microphone.'
+          : 'Tidak ada suara yang terdeteksi. Silakan coba berbicara lebih dekat/jelas ke mikrofon Anda.';
+    } else if (code === 'network') {
+      friendly =
+        options.lang === 'en'
+          ? 'Web Speech service network error. Chrome requires an internet connection for speech recognition.'
+          : 'Layanan suara browser membutuhkan koneksi internet (Chrome Web Speech API). Pastikan koneksi internet aktif.';
+    } else if (code === 'audio-capture') {
+      friendly =
+        options.lang === 'en'
+          ? 'No microphone hardware found or audio device is in use by another app.'
+          : 'Perangkat mikrofon tidak ditemukan atau sedang dipakai aplikasi lain.';
+    }
+
+    options.onError?.(new Error(friendly));
   };
 
   recognition.onresult = (event: ISpeechRecognitionEvent) => {
