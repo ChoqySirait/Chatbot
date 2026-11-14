@@ -5,6 +5,7 @@ import {
   isSpeechSynthesisSupported,
   speakText,
   stopSpeaking,
+  requestMicrophonePermission,
 } from '../utils/speechController';
 
 describe('Web Speech Controller & Sanitization (VOICE-01)', () => {
@@ -65,5 +66,58 @@ describe('Web Speech Controller & Sanitization (VOICE-01)', () => {
     expect(result).toHaveProperty('cancel');
 
     expect(() => stopSpeaking()).not.toThrow();
+  });
+
+  describe('Microphone Permission Controller', () => {
+    it('returns mediaDevices_unavailable when navigator.mediaDevices is absent', async () => {
+      const originalMediaDevices = navigator.mediaDevices;
+      Object.defineProperty(navigator, 'mediaDevices', {
+        value: undefined,
+        configurable: true,
+      });
+
+      const res = await requestMicrophonePermission();
+      expect(res.granted).toBe(false);
+      expect(res.error).toBe('mediaDevices_unavailable');
+
+      Object.defineProperty(navigator, 'mediaDevices', {
+        value: originalMediaDevices,
+        configurable: true,
+      });
+    });
+
+    it('returns granted true and halts tracks when getUserMedia succeeds', async () => {
+      const stopFn = vi.fn();
+      const mockStream = {
+        getTracks: () => [{ stop: stopFn }],
+      };
+
+      Object.defineProperty(navigator, 'mediaDevices', {
+        value: {
+          getUserMedia: vi.fn().mockResolvedValue(mockStream),
+        },
+        configurable: true,
+      });
+
+      const res = await requestMicrophonePermission();
+      expect(res.granted).toBe(true);
+      expect(stopFn).toHaveBeenCalledOnce();
+    });
+
+    it('handles NotAllowedError when user blocks permission', async () => {
+      const err = new Error('Permission denied');
+      err.name = 'NotAllowedError';
+
+      Object.defineProperty(navigator, 'mediaDevices', {
+        value: {
+          getUserMedia: vi.fn().mockRejectedValue(err),
+        },
+        configurable: true,
+      });
+
+      const res = await requestMicrophonePermission();
+      expect(res.granted).toBe(false);
+      expect(res.error).toBe('NotAllowedError');
+    });
   });
 });

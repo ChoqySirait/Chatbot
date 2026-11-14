@@ -74,6 +74,31 @@ export function isSpeechSynthesisSupported(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 }
 
+export interface MicrophonePermissionResult {
+  granted: boolean;
+  error?: string;
+}
+
+/**
+ * Prompts the user for microphone access via getUserMedia if not yet authorized.
+ * This explicitly triggers the browser's native permission bubble (which webkitSpeechRecognition
+ * does not consistently trigger on HTTP/loopback origins in Chromium).
+ */
+export async function requestMicrophonePermission(): Promise<MicrophonePermissionResult> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    return { granted: false, error: 'mediaDevices_unavailable' };
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Immediately stop all audio tracks so the microphone hardware is freed for Web Speech recognition
+    stream.getTracks().forEach((track) => track.stop());
+    return { granted: true };
+  } catch (err: unknown) {
+    const errName = err instanceof Error ? err.name : String(err);
+    return { granted: false, error: errName };
+  }
+}
+
 /**
  * Sanitizes markdown, defanged URLs, long technical hashes, and code blocks
  * into natural conversational prose for clear, human-like voice synthesis.
@@ -285,8 +310,8 @@ export function createSpeechRecognizer(options: {
     if (code === 'not-allowed') {
       friendly =
         options.lang === 'en'
-          ? 'Microphone permission was blocked. Please click the padlock/tune icon in your browser address bar and set Microphone to "Allow".'
-          : 'Izin mikrofon diblokir oleh browser. Silakan klik ikon gembok di sebelah kiri bilah alamat browser Anda dan ubah izin Mikrofon menjadi "Izinkan" (Allow).';
+          ? 'Microphone permission was blocked. Please click the site settings / padlock icon in your browser address bar, set Microphone to "Allow", and verify Windows Microphone privacy settings.'
+          : 'Izin mikrofon belum diizinkan atau diblokir. Silakan klik ikon gembok/setelan situs di sebelah kiri bilah alamat browser Anda dan ubah Mikrofon menjadi "Izinkan" (Allow), serta pastikan akses mikrofon aktif di pengaturan Windows.';
     } else if (code === 'no-speech') {
       friendly =
         options.lang === 'en'

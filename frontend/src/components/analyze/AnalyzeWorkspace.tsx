@@ -37,6 +37,7 @@ import {
   speakText,
   stopSpeaking,
   createSpeechRecognizer,
+  requestMicrophonePermission,
   type SpeechRecognitionController,
 } from '../../utils/speechController';
 
@@ -115,10 +116,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     };
   }, []);
 
-  const handleToggleListen = () => {
+  const handleToggleListen = async () => {
     if (isListening) {
       speechRecognizerRef.current?.stop();
       setIsListening(false);
+      setError(null);
       setNotice(
         language === 'en'
           ? 'Microphone stopped.'
@@ -128,6 +130,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     }
 
     if (!isSpeechRecognitionSupported()) {
+      setNotice(null);
       setError(
         language === 'en'
           ? 'Web Speech voice recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.'
@@ -137,23 +140,54 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     }
 
     setError(null);
-    setNotice(
-      language === 'en'
-        ? 'Microphone is listening... Speak your question or incident.'
-        : 'Mikrofon aktif mendengarkan... Silakan ceritakan pesan atau kendala keamanan Anda.'
-    );
+    setNotice(null);
+
+    // Explicitly request microphone stream permission to trigger native Chrome popup
+    const perm = await requestMicrophonePermission();
+    if (!perm.granted) {
+      setIsListening(false);
+      setNotice(null);
+
+      if (perm.error === 'NotAllowedError' || perm.error === 'PermissionDeniedError') {
+        setError(
+          language === 'en'
+            ? 'Microphone permission was blocked. Please click the site settings / padlock icon in your browser address bar and set Microphone to "Allow". Also verify Windows Settings > Privacy & security > Microphone.'
+            : 'Izin mikrofon belum diberikan atau diblokir. Silakan klik ikon gembok/setelan situs di sebelah kiri bilah alamat browser Anda dan ubah izin Mikrofon menjadi "Izinkan" (Allow). Pastikan juga izin mikrofon aktif di Pengaturan Windows (Settings > Privacy & security > Microphone).'
+        );
+      } else if (perm.error === 'NotFoundError' || perm.error === 'DevicesNotFoundError') {
+        setError(
+          language === 'en'
+            ? 'No microphone hardware found. Please plug in or enable your microphone.'
+            : 'Perangkat mikrofon tidak ditemukan. Pastikan mikrofon terpasang dan aktif di Windows.'
+        );
+      } else {
+        setError(
+          language === 'en'
+            ? `Microphone access error (${perm.error}). Please check browser permissions.`
+            : `Gagal mengakses mikrofon (${perm.error}). Silakan periksa izin mikrofon browser.`
+        );
+      }
+      return;
+    }
 
     try {
       const recognizer = createSpeechRecognizer({
         lang: language,
         onStart: () => {
           setIsListening(true);
+          setError(null);
+          setNotice(
+            language === 'en'
+              ? 'Microphone is listening... Speak your question or incident.'
+              : 'Mikrofon aktif mendengarkan... Silakan ceritakan pesan atau kendala keamanan Anda.'
+          );
         },
         onEnd: () => {
           setIsListening(false);
         },
         onError: (err) => {
           setIsListening(false);
+          setNotice(null);
           const errorMsg = err instanceof Error ? err.message : String(err);
           setError(errorMsg);
         },
@@ -161,6 +195,7 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           setChatInput(transcript);
           if (isFinal) {
             setIsListening(false);
+            setError(null);
             setNotice(
               language === 'en'
                 ? 'Voice input converted to text!'
@@ -176,10 +211,11 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       }
     } catch (err) {
       setIsListening(false);
+      setNotice(null);
       setError(
         language === 'en'
-          ? `Microphone error: ${err}`
-          : `Kendala mikrofon: ${err}`
+          ? `Microphone error: ${err instanceof Error ? err.message : err}`
+          : `Kendala mikrofon: ${err instanceof Error ? err.message : err}`
       );
     }
   };

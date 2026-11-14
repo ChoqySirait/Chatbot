@@ -18,6 +18,7 @@ def test_security_headers_present():
     assert headers.get("x-frame-options") == "DENY"
     assert headers.get("referrer-policy") == "strict-origin-when-cross-origin"
     assert "geolocation=()" in headers.get("permissions-policy", "")
+    assert "microphone=(self)" in headers.get("permissions-policy", "")
     assert "frame-ancestors 'none'" in headers.get("content-security-policy", "")
 
 
