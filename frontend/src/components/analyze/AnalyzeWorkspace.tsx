@@ -108,6 +108,34 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const speechRecognizerRef = useRef<SpeechRecognitionController | null>(null);
 
+  // Auto-Voice Mode: Hands-free automatic sending upon speech finalization & automatic spoken reply
+  const [autoVoiceMode, setAutoVoiceMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('securai_auto_voice') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleAutoVoiceMode = () => {
+    const next = !autoVoiceMode;
+    setAutoVoiceMode(next);
+    try {
+      localStorage.setItem('securai_auto_voice', String(next));
+      if (next) {
+        localStorage.setItem('securai_auto_speak', 'true');
+      }
+    } catch {
+      // Ignore localStorage write error
+    }
+    setNotice(
+      next
+        ? t.voice.autoVoiceActive
+        : t.voice.autoVoiceInactive
+    );
+  };
+
   // Clean up speech synthesis & recognition on unmount
   useEffect(() => {
     return () => {
@@ -115,6 +143,118 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       speechRecognizerRef.current?.abort();
     };
   }, []);
+
+  const persistHistory = async (
+    inputType: StoredAnalysisRecord['inputType'],
+    inputSummary: string,
+    canonicalResult: CanonicalAnalysisResult,
+    evidenceHash?: string,
+    networkIntel?: NetworkIntel
+  ) => {
+    try {
+      await db.analysisHistory.add({
+        analysisId: canonicalResult.analysis_id,
+        createdAt: new Date().toISOString(),
+        inputType,
+        inputSummary: inputSummary.slice(0, 120),
+        classification: canonicalResult.classification,
+        riskScore: canonicalResult.risk_score,
+        canonicalResult,
+        networkIntel,
+        evidenceHash,
+      });
+      onVaultUpdated?.();
+    } catch {
+      // Ignore IndexedDB persistence errors in restricted browsing contexts
+    }
+  };
+
+  const executeSendChat = async (textToSend: string, autoSpeakAfter = false) => {
+    const userText = textToSend.trim();
+    if (!userText || loading) return;
+
+    setChatInput('');
+    setError(null);
+    setNotice(null);
+    setMessages((prev) => [...prev, { role: 'user', content: userText }]);
+    setLoading(true);
+
+    try {
+      const historyPayload = messages.map((m) => ({
+        role: m.role,
+        content: m.id === 'welcome' ? welcomeContent : m.content,
+      }));
+      const res = await fetch('/api/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText, history: historyPayload, mode, language }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.detail || `API Error (${res.status})`);
+      }
+
+      const data: ChatResponse = await res.json();
+      const canonical = data.canonical_result || undefined;
+      const intel = data.heuristics?.network_intel || undefined;
+      const evHash = data.heuristics?.evidence_hash || undefined;
+      const replyId = 'reply-' + Date.now();
+
+      setMessages((prev) => [
+        ...prev,
+        { id: replyId, role: 'assistant', content: data.reply, canonical },
+      ]);
+
+      const shouldAutoSpeak =
+        autoSpeakAfter ||
+        autoVoiceMode ||
+        (typeof window !== 'undefined' && localStorage.getItem('securai_auto_speak') === 'true');
+
+      if (shouldAutoSpeak && data.reply) {
+        setSpeakingMessageId(replyId);
+        const rate = Number(localStorage.getItem('securai_speech_rate') || '1.0');
+        speakText(data.reply, {
+          lang: language,
+          rate,
+          onStart: () => setSpeakingMessageId(replyId),
+          onEnd: () => setSpeakingMessageId(null),
+          onError: () => setSpeakingMessageId(null),
+        });
+      }
+
+      if (canonical) {
+        setCurrentResult(canonical);
+        setCurrentTelemetry(intel);
+        setCurrentEvidenceHash(evHash);
+        await persistHistory(
+          canonical.analysis_type === 'url' ? 'url' : 'message',
+          userText,
+          canonical,
+          evHash,
+          intel
+        );
+      }
+    } catch (err) {
+      setError(
+        language === 'en'
+          ? `Failed to reach analysis server: ${err}`
+          : `Gagal menghubungi server analisis: ${err}`
+      );
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content:
+            language === 'en'
+              ? 'Sorry, failed to communicate with the SecurAI backend. Please verify the server is running.'
+              : 'Maaf, terjadi kendala komunikasi dengan backend SecurAI. Pastikan server backend berjalan.',
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleToggleListen = async () => {
     if (isListening) {
@@ -196,11 +336,16 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           if (isFinal) {
             setIsListening(false);
             setError(null);
-            setNotice(
-              language === 'en'
-                ? 'Voice input converted to text!'
-                : 'Suara Anda berhasil diubah menjadi teks!'
-            );
+            if (autoVoiceMode && transcript.trim()) {
+              setNotice(t.voice.autoSending);
+              executeSendChat(transcript.trim(), true);
+            } else {
+              setNotice(
+                language === 'en'
+                  ? 'Voice input converted to text!'
+                  : 'Suara Anda berhasil diubah menjadi teks!'
+              );
+            }
           }
         },
       });
@@ -259,31 +404,6 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, loading]);
 
-  const persistHistory = async (
-    inputType: StoredAnalysisRecord['inputType'],
-    inputSummary: string,
-    canonicalResult: CanonicalAnalysisResult,
-    evidenceHash?: string,
-    networkIntel?: NetworkIntel
-  ) => {
-    try {
-      await db.analysisHistory.add({
-        analysisId: canonicalResult.analysis_id,
-        createdAt: new Date().toISOString(),
-        inputType,
-        inputSummary: inputSummary.slice(0, 120),
-        classification: canonicalResult.classification,
-        riskScore: canonicalResult.risk_score,
-        canonicalResult,
-        networkIntel,
-        evidenceHash,
-      });
-      onVaultUpdated?.();
-    } catch {
-      // Ignore IndexedDB persistence errors in restricted browsing contexts
-    }
-  };
-
   // Utility: Defang URL
   const defangUrl = (url: string): string => {
     return url
@@ -293,86 +413,9 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
   };
 
   // Action: Analyze Chat
-  const handleSendChat = async (e: React.FormEvent) => {
+  const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim() || loading) return;
-
-    const userText = chatInput.trim();
-    setChatInput('');
-    setError(null);
-    setNotice(null);
-    setMessages((prev) => [...prev, { role: 'user', content: userText }]);
-    setLoading(true);
-
-    try {
-      const historyPayload = messages.map((m) => ({
-        role: m.role,
-        content: m.id === 'welcome' ? welcomeContent : m.content,
-      }));
-      const res = await fetch('/api/v1/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText, history: historyPayload, mode, language }),
-      });
-
-      if (!res.ok) {
-        const errBody = await res.json().catch(() => null);
-        throw new Error(errBody?.detail || `API Error (${res.status})`);
-      }
-
-      const data: ChatResponse = await res.json();
-      const canonical = data.canonical_result || undefined;
-      const intel = data.heuristics?.network_intel || undefined;
-      const evHash = data.heuristics?.evidence_hash || undefined;
-      const replyId = 'reply-' + Date.now();
-
-      setMessages((prev) => [
-        ...prev,
-        { id: replyId, role: 'assistant', content: data.reply, canonical },
-      ]);
-
-      if (typeof window !== 'undefined' && localStorage.getItem('securai_auto_speak') === 'true' && data.reply) {
-        setSpeakingMessageId(replyId);
-        const rate = Number(localStorage.getItem('securai_speech_rate') || '1.0');
-        speakText(data.reply, {
-          lang: language,
-          rate,
-          onEnd: () => setSpeakingMessageId(null),
-          onError: () => setSpeakingMessageId(null),
-        });
-      }
-
-      if (canonical) {
-        setCurrentResult(canonical);
-        setCurrentTelemetry(intel);
-        setCurrentEvidenceHash(evHash);
-        await persistHistory(
-          canonical.analysis_type === 'url' ? 'url' : 'message',
-          userText,
-          canonical,
-          evHash,
-          intel
-        );
-      }
-    } catch (err) {
-      setError(
-        language === 'en'
-          ? `Failed to reach analysis server: ${err}`
-          : `Gagal menghubungi server analisis: ${err}`
-      );
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content:
-            language === 'en'
-              ? 'Sorry, failed to communicate with the SecurAI backend. Please verify the server is running.'
-              : 'Maaf, terjadi kendala komunikasi dengan backend SecurAI. Pastikan server backend berjalan.',
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    executeSendChat(chatInput, autoVoiceMode);
   };
 
   // Action: Analyze Single URL
@@ -750,13 +793,36 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
           {/* SubTab 1: Chat Triage */}
           {activeSubTab === 'chat' && (
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl flex flex-col h-[560px] overflow-hidden">
-              <div className="p-3.5 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-300">
-                  {language === 'en' ? 'Incident Triage Chat' : 'Asisten Triage Insiden'}
-                </span>
-                <span className="text-[11px] font-mono text-slate-400">
-                  {mode === 'analyst' ? t.modes.analyst : t.modes.consumer}
-                </span>
+              <div className="p-3 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-300">
+                    {language === 'en' ? 'Incident Triage Chat' : 'Asisten Triage Insiden'}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded-full bg-slate-800/80 border border-slate-700/50">
+                    {mode === 'analyst' ? t.modes.analyst : t.modes.consumer}
+                  </span>
+                </div>
+
+                {isSpeechRecognitionSupported() && (
+                  <button
+                    type="button"
+                    onClick={toggleAutoVoiceMode}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all cursor-pointer border ${
+                      autoVoiceMode
+                        ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300 shadow-sm shadow-cyan-500/10'
+                        : 'bg-slate-800/60 border-slate-700/50 text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                    }`}
+                    title={
+                      autoVoiceMode
+                        ? t.voice.autoVoiceActive
+                        : t.voice.autoVoiceInactive
+                    }
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${autoVoiceMode ? 'bg-cyan-400 animate-pulse' : 'bg-slate-500'}`} />
+                    <span>{t.voice.autoVoiceToggle}</span>
+                    <span className="text-[9px] font-mono opacity-80 uppercase">({autoVoiceMode ? 'ON' : 'OFF'})</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto space-y-3">
@@ -868,6 +934,8 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                       ? t.voice.micNotSupported
                       : isListening
                       ? t.voice.micStop
+                      : autoVoiceMode
+                      ? t.voice.autoVoiceActive
                       : t.voice.micStart
                   }
                   className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
@@ -875,10 +943,16 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                       ? 'opacity-40 cursor-not-allowed bg-slate-900 border-slate-800 text-slate-500'
                       : isListening
                       ? 'bg-rose-500/25 border-rose-500 text-rose-300 animate-pulse'
+                      : autoVoiceMode
+                      ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/25'
                       : 'bg-slate-900 border-slate-700 hover:border-cyan-500/70 text-slate-400 hover:text-cyan-400'
                   }`}
                 >
-                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  {isListening ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className={`w-4 h-4 ${autoVoiceMode ? 'text-cyan-300' : ''}`} />
+                  )}
                 </button>
 
                 <button

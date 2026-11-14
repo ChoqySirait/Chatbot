@@ -169,6 +169,10 @@ export const translations = {
       speechRateLabel: 'Kecepatan Bicara',
       testVoiceBtn: 'Uji Suara Asisten',
       testVoiceSample: 'Halo! Saya asisten SecurAI siap membantu mengamankan aktivitas digital Anda.',
+      autoVoiceToggle: 'Suara Otomatis',
+      autoVoiceActive: 'Mode Suara Otomatis Aktif (Kirim langsung & jawab bersuara)',
+      autoVoiceInactive: 'Mode Suara Manual',
+      autoSending: 'Suara terdeteksi — mengirim otomatis ke SecurAI...',
     },
   },
   en: {
@@ -339,6 +343,10 @@ export const translations = {
       speechRateLabel: 'Speech Rate',
       testVoiceBtn: 'Test Assistant Voice',
       testVoiceSample: 'Hello! I am SecurAI assistant ready to help protect your digital activities.',
+      autoVoiceToggle: 'Auto-Voice',
+      autoVoiceActive: 'Auto-Voice Active (Hands-free voice chat & spoken reply)',
+      autoVoiceInactive: 'Manual Voice Mode',
+      autoSending: 'Voice detected — auto-sending to SecurAI...',
     },
   },
 };
