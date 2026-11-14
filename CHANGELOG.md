@@ -2,6 +2,22 @@
 
 Seluruh perubahan penting pada platform **SecurAI — Digital Trust, Threat Intelligence & Incident Assistance** didokumentasikan pada berkas ini.
 
+## [2.8.0] - 2026-11-14
+
+Rilis fitur **v2.8.0 (Milestone 9)** yang menghadirkan interaksi percakapan suara dwibahasa (*Conversational Voice Triage*) berbasis browser Web Speech API standar tanpa rekaman audio ke server awan.
+
+### Added / Changed
+- **Client-Side Web Speech API Controller (`VOICE-01`):**
+  - Implementasi modul [`speechController.ts`](frontend/src/utils/speechController.ts) untuk pengenalan suara (*Speech-to-Text*) dan sintesis ucapan (*Text-to-Speech*) 100% lokal di browser.
+  - Modul sanitasi cerdas `sanitizeTextForSpeech` yang membersihkan sintaks markdown, tautan, blok kode, URL defanged (`hxxp://`), serta menyingkat hash heksadesimal SHA-256 panjang agar ucapan asisten terdengar alami, empatik, dan tidak melelahkan.
+- **Voice Triage Microphone & Speaker Controls (`VOICE-02`):**
+  - Tombol mikrofon interaktif pada bilah input obrolan triage dengan visual animasi denyut saat mendengarkan dan transkripsi langsung (*real-time speech-to-text*).
+  - Tombol ikon speaker pada gelembung obrolan asisten untuk mendengarkan ringkasan mitigasi darurat dan tombol henti instan.
+  - Pengaturan interaksi suara di [`SettingsManager.tsx`](frontend/src/components/settings/SettingsManager.tsx) mencakup sakelar respons suara otomatis (*auto-speak*), pengatur tempo bicara (0.8x, 1.0x, 1.2x), serta tombol pratinjau uji suara.
+  - Paritas 100% kamus terjemahan dwibahasa (ID/EN) untuk seluruh label suara baru.
+- **Testing & Quality Assurance:**
+  - Menambahkan 6 kasus uji baru pada [`speechController.test.ts`](frontend/src/__tests__/speechController.test.ts), meningkatkan total suite menjadi **25 Vitest tests** + **86 Pytest tests** = **111 automated tests passed**.
+
 ## [2.7.0] - 2026-11-13
 
 Rilis pembaruan **v2.7.0 (Milestone 8)** yang menambahkan enkripsi brankas sisi klien (*Web Crypto API*), React Error Boundary yang tangguh, loading skeletons ramah aksesibilitas, dan mitigasi gerakan berlebih.

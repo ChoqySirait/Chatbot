@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Tests Passed](https://img.shields.io/badge/Pytest-86%2F86%20Passed-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
-[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-19%2F19%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
+[![Frontend Build](https://img.shields.io/badge/React%2019%20%2B%20Vitest-25%2F25%20Passed-06B6D4?style=for-the-badge&logo=react&logoColor=white)](frontend/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 [![Security: MITRE ATT&CK](https://img.shields.io/badge/Framework-MITRE%20ATT%26CK-EF4444?style=for-the-badge&logo=shield&logoColor=white)](https://attack.mitre.org/)
 
@@ -45,7 +45,8 @@
 
 ## 📊 Status Implementasi Fitur
 
-### ✅ Fitur Rilis v2.7.0 (Milestones 1–8 Selesai)
+### ✅ Fitur Rilis v2.8.0 (Milestones 1–9 Selesai)
+- **Conversational Voice Triage & Web Speech (Milestone 9 - VOICE-01, VOICE-02):** Input mikrofon interaktif (*Speech-to-Text*) dengan animasi denyut visual, keluaran suara asisten (*Text-to-Speech*) dengan sanitasi pembersihan format markdown & hash teknis 64-karakter, sakelar respons suara otomatis (*auto-speak*), serta kontrol tempo bicara 100% lokal berbasis Web Speech API (*zero audio cloud upload*).
 - **Client-Side Vault Encryption & Case Bundles (Milestone 8 - INC-08):** Enkripsi brankas Web Crypto API (PBKDF2-HMAC-SHA256 100.000 iterasi + AES-256-GCM + IV 12-byte + SHA-256 integrity checksum) untuk ekspor paket kasus `.securai` dan cadangan brankas penuh, dilengkapi dokumen model ancaman (*threat model boundary*).
 - **UI Error Boundary, Loading Skeletons & Reduced Motion (Milestone 8 - UX-10):** React Error Boundary dengan Dark Slate crash card & tombol pemulihan tanpa kehilangan data IndexedDB, skeleton pulse penanda status `role="status"` tanpa pergeseran tata letak (*layout shift*), serta dukungan `@media (prefers-reduced-motion: reduce)`.
 - **Aksesibilitas Keyboard/ARIA, Cetak PDF Dosir & Performance Budgets (Milestone 7 - UX-09, REP-03, EDU-02, REL-07):** Navigasi tab WAI-ARIA (*skip-link*, `tablist`/`tab` panah keyboard, `aria-live`), cetak PDF dosir forensik bersih (`@media print`), sumber & tanggal peninjauan studi kasus, serta guard ukuran aset `dist` dan target latensi p95 luring.

@@ -22,7 +22,7 @@ setup_logging()
 app = FastAPI(
     title="SecurAI — Digital Trust & Incident Assistance Hub",
     description="Platform Triage Anti-Fraud, Multi-Vector Threat Intelligence & Incident Assistance",
-    version="2.7.0"
+    version="2.8.0"
 )
 
 # Registrasi middleware keamanan dan rate limiting (SEC-08, SEC-09)

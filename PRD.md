@@ -1,7 +1,7 @@
 # Product Requirement Document (PRD)
 
 ## Project Name: SecurAI — Digital Trust, Threat Intelligence & Incident Assistance Platform
-**Status:** Released v2.7.0 (Milestones 0–8 Selesai & Terverifikasi)  
+**Status:** Released v2.8.0 (Milestones 0–9 Selesai & Terverifikasi)  
 **Architecture:** Modular FastAPI Backend + React 19/Vite/TS Local-First Frontend
 
 ---
@@ -42,6 +42,8 @@ Masyarakat dan analis keamanan junior di Indonesia kerap menghadapi modus penipu
 | UX-05 | **Local Overview Dashboard** | Tab Ringkasan (*Overview*) untuk statistik riwayat pemeriksaan, temuan risiko tinggi, kasus aktif, dan artefak SHA-256 lokal. | ✅ Complete |
 | UX-09 | **Keyboard & ARIA Accessibility** | Skip-link konten utama, WAI-ARIA `tablist`/`tab` beserta navigasi panah keyboard, `aria-pressed`, `aria-live="polite"`, fokus jelas, dan styling `@media print`. | ✅ Complete |
 | UX-10 | **UI Error Boundary & Skeleton Loaders** | React Error Boundary dengan Dark Slate crash card & recovery state tanpa data loss, skeleton pulse `role="status"` tanpa layout shift, serta dukungan `@media (prefers-reduced-motion: reduce)`. | ✅ Complete |
+| VOICE-01 | **Web Speech API & Text Sanitizer** | Modul klien mandiri Speech-to-Text dan Speech Synthesis (W3C standard) dengan sanitasi pembersihan markdown, URL defanged, dan hash SHA-256 panjang. | ✅ Complete |
+| VOICE-02 | **Conversational Voice Triage & Controls** | Input mikrofon interaktif dengan animasi denyut, tombol putar suara pada obrolan asisten, toggle auto-speak respons, dan pemilih tempo bicara di Pengaturan. | ✅ Complete |
 | INC-02 | **Local-First Storage (Dexie.js)** | Penyimpanan buku kasus insiden, timeline kronologis, dan brankas bukti pada IndexedDB peramban (*zero cloud server retention*). | ✅ Complete |
 | INC-08 | **Client-Side Vault Encryption** | Enkripsi brankas Web Crypto API (PBKDF2 100k + AES-256-GCM + IV 12-byte + SHA-256) untuk paket kasus `.securai` dan cadangan penuh brankas, dilengkapi dokumen model ancaman. | ✅ Complete |
 | REP-01 | **Forensic Dossier Exporter** | Ekspor laporan insiden komprehensif dalam format Markdown (.md), JSON kanonikal, dan cetak PDF bersih (Surat Sanggahan Bank + Dosir Forensik). | ✅ Complete |
@@ -54,6 +56,6 @@ Masyarakat dan analis keamanan junior di Indonesia kerap menghadapi modus penipu
 
 ### 4. Technical Specifications
 - **Backend:** Python 3.10+ (diuji pada Python 3.13), FastAPI, Uvicorn, HTTPX (Asynchronous I/O), Pydantic v2, Pillow.
-- **Frontend:** React 19, Vite 8, TypeScript, Tailwind CSS v4, Lucide React, Dexie.js (IndexedDB), `oxlint`, Vitest + `fake-indexeddb`.
+- **Frontend:** React 19, Vite 8, TypeScript, Tailwind CSS v4, Lucide React, Dexie.js (IndexedDB), Web Speech API, `oxlint`, Vitest + `fake-indexeddb`.
 - **AI Engine:** Google GenAI SDK (`MODEL_NAME` default `gemini-3.5-flash` beserta daftar model fallback terurut) menggunakan Structured JSON Outputs.
-- **Testing & CI:** 86 backend tests offline (Pytest, `pytest-asyncio`) + 19 frontend unit tests offline (Vitest) = 105 automated tests terintegrasi dengan GitHub Actions CI workflow.
+- **Testing & CI:** 86 backend tests offline (Pytest, `pytest-asyncio`) + 25 frontend unit tests offline (Vitest) = 111 automated tests terintegrasi dengan GitHub Actions CI workflow.
