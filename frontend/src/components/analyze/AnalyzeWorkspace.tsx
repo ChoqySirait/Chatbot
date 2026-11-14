@@ -13,6 +13,10 @@ import {
   Upload,
   CheckCircle2,
   Lock,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import type {
   CanonicalAnalysisResult,
@@ -27,6 +31,14 @@ import { useMode } from '../../context/useMode';
 import { ConsumerView } from './ConsumerView';
 import { AnalystView } from './AnalystView';
 import { AnalyzeWorkspaceSkeleton } from '../common/SkeletonLoader';
+import {
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  speakText,
+  stopSpeaking,
+  createSpeechRecognizer,
+  type SpeechRecognitionController,
+} from '../../utils/speechController';
 
 interface AnalyzeWorkspaceProps {
   onSwitchTab: (tab: 'incidents' | 'evidence' | 'reports') => void;
@@ -89,6 +101,68 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
   const [casesList, setCasesList] = useState<{ id?: number; caseId: string; title: string }[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Voice interaction states (VOICE-01 / VOICE-02)
+  const [isListening, setIsListening] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const speechRecognizerRef = useRef<SpeechRecognitionController | null>(null);
+
+  // Clean up speech synthesis & recognition on unmount
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+      speechRecognizerRef.current?.abort();
+    };
+  }, []);
+
+  const handleToggleListen = () => {
+    if (isListening) {
+      speechRecognizerRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    if (!isSpeechRecognitionSupported()) return;
+
+    try {
+      const recognizer = createSpeechRecognizer({
+        lang: language,
+        onStart: () => setIsListening(true),
+        onEnd: () => setIsListening(false),
+        onError: () => setIsListening(false),
+        onResult: (transcript, isFinal) => {
+          setChatInput(transcript);
+          if (isFinal) {
+            setIsListening(false);
+          }
+        },
+      });
+
+      if (recognizer) {
+        speechRecognizerRef.current = recognizer;
+        recognizer.start();
+      }
+    } catch {
+      setIsListening(false);
+    }
+  };
+
+  const handleToggleSpeak = (msgId: string, textToSpeak: string) => {
+    if (speakingMessageId === msgId) {
+      stopSpeaking();
+      setSpeakingMessageId(null);
+      return;
+    }
+
+    setSpeakingMessageId(msgId);
+    const rate = Number(localStorage.getItem('securai_speech_rate') || '1.0');
+    speakText(textToSpeak, {
+      lang: language,
+      rate,
+      onEnd: () => setSpeakingMessageId(null),
+      onError: () => setSpeakingMessageId(null),
+    });
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -159,11 +233,23 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
       const canonical = data.canonical_result || undefined;
       const intel = data.heuristics?.network_intel || undefined;
       const evHash = data.heuristics?.evidence_hash || undefined;
+      const replyId = 'reply-' + Date.now();
 
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.reply, canonical },
+        { id: replyId, role: 'assistant', content: data.reply, canonical },
       ]);
+
+      if (typeof window !== 'undefined' && localStorage.getItem('securai_auto_speak') === 'true' && data.reply) {
+        setSpeakingMessageId(replyId);
+        const rate = Number(localStorage.getItem('securai_speech_rate') || '1.0');
+        speakText(data.reply, {
+          lang: language,
+          rate,
+          onEnd: () => setSpeakingMessageId(null),
+          onError: () => setSpeakingMessageId(null),
+        });
+      }
 
       if (canonical) {
         setCurrentResult(canonical);
@@ -599,16 +685,54 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                         {m.id === 'welcome' ? welcomeContent : m.content}
                       </p>
 
-                      {m.canonical && (
-                        <div className="mt-2 pt-2 border-t border-slate-700/60 flex items-center justify-between gap-2 text-[10px] font-mono">
-                          <span className="text-cyan-300">Risk: {m.canonical.risk_score}/100</span>
-                          <button
-                            type="button"
-                            onClick={() => setCurrentResult(m.canonical || null)}
-                            className="underline hover:text-white"
-                          >
-                            {language === 'en' ? 'Open Forensic Details' : 'Buka Detail Forensik'}
-                          </button>
+                      {m.role === 'assistant' && (
+                        <div className="mt-2 pt-1.5 border-t border-slate-700/60 flex items-center justify-between gap-2 text-[10px]">
+                          {isSpeechSynthesisSupported() && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleToggleSpeak(
+                                  m.id || `msg-${idx}`,
+                                  m.id === 'welcome' ? welcomeContent : m.content
+                                )
+                              }
+                              className={`flex items-center gap-1 transition-colors cursor-pointer ${
+                                speakingMessageId === (m.id || `msg-${idx}`)
+                                  ? 'text-rose-400 font-semibold'
+                                  : 'text-slate-400 hover:text-cyan-300'
+                              }`}
+                              title={
+                                speakingMessageId === (m.id || `msg-${idx}`)
+                                  ? t.voice.stopSpeaking
+                                  : t.voice.speakResponse
+                              }
+                            >
+                              {speakingMessageId === (m.id || `msg-${idx}`) ? (
+                                <>
+                                  <VolumeX className="w-3.5 h-3.5" />
+                                  <span>{t.voice.stopSpeaking}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+                                  <span>{t.voice.speakResponse}</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+
+                          {m.canonical && (
+                            <div className="flex items-center gap-2 font-mono ml-auto">
+                              <span className="text-cyan-300">Risk: {m.canonical.risk_score}/100</span>
+                              <button
+                                type="button"
+                                onClick={() => setCurrentResult(m.canonical || null)}
+                                className="underline hover:text-white"
+                              >
+                                {language === 'en' ? 'Open Details' : 'Buka Detail'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -625,22 +749,45 @@ export const AnalyzeWorkspace: React.FC<AnalyzeWorkspaceProps> = ({
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={handleSendChat} className="p-3 border-t border-slate-800 bg-slate-950/60 flex gap-2">
+              <form onSubmit={handleSendChat} className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center gap-2">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder={
-                    language === 'en'
-                      ? 'Ask a security question or paste suspicious text...'
-                      : 'Ketik pertanyaan atau tempel teks penipuan...'
+                    isListening
+                      ? t.voice.micListening
+                      : (language === 'en'
+                          ? 'Ask a security question or paste suspicious text...'
+                          : 'Ketik pertanyaan atau tempel teks penipuan...')
                   }
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className={`flex-1 bg-slate-900 border rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    isListening
+                      ? 'border-rose-500/80 bg-rose-950/20 shadow-inner'
+                      : 'border-slate-700 focus:border-cyan-500'
+                  }`}
                 />
+
+                {isSpeechRecognitionSupported() && (
+                  <button
+                    type="button"
+                    onClick={handleToggleListen}
+                    disabled={loading}
+                    title={isListening ? t.voice.micStop : t.voice.micStart}
+                    className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                      isListening
+                        ? 'bg-rose-500/25 border-rose-500 text-rose-300 animate-pulse'
+                        : 'bg-slate-900 border-slate-700 hover:border-cyan-500/70 text-slate-400 hover:text-cyan-400'
+                    }`}
+                  >
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading || !chatInput.trim()}
-                  className="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white transition-colors"
+                  className="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white transition-colors cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
                 </button>
